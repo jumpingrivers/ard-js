@@ -1,0 +1,3 @@
+/* globals chartMaker */
+
+chartMaker.createSankey();

@@ -2,19 +2,19 @@
   "name": "sankey-sunburst",
   "version": "0.0.1",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c",
-    "lint": "npx eslint src/ --max-warnings=0",
-    "lint:fix": "npx eslint --fix src/ --max-warnings=0",
-    "serve": "lite-server",
+    "lint": "npx eslint --ext .mjs --max-warnings=0",
+    "lint:fix": "npx eslint --ext .mjs --fix src/ --max-warnings=0",
+    "serve": "lite-server --baseDir='examples'",
     "start": "npm run serve & npm run watch",
     "watch": "nodemon --ignore dist/ --exec npm run build",
     "prepare": "husky install"
   },
   "lint-staged": {
-    "*.js": "npm run lint"
+    "*.mjs": "npm run lint"
   },
   "author": "",
   "license": "ISC",

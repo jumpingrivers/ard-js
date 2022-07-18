@@ -10,16 +10,16 @@
     "lint:fix": "npx eslint --fix src/ --max-warnings=0",
     "serve": "lite-server",
     "start": "npm run serve & npm run watch",
-    "watch": "nodemon --ignore dist/ --exec npm run build"
+    "watch": "nodemon --ignore dist/ --exec npm run build",
+    "prepare": "husky install"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^8.20.0",
+    "husky": "^8.0.1",
     "lite-server": "^2.6.1",
     "nodemon": "^2.0.19",
     "rollup": "^2.77.0"
-  },
-  "dependencies": {
-    "eslint": "^8.20.0"
   }
 }

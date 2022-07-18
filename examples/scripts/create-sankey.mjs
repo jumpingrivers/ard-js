@@ -10,4 +10,6 @@ const sankeySteps = [
   ['outcome']
 ];
 
-chartMaker.createSankey(data, sankeySteps);
+const sankey = chartMaker.createSankey(data, sankeySteps);
+const container = document.querySelector('#viz-container');
+container.appendChild(sankey.viz);

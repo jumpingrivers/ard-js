@@ -10,7 +10,7 @@
     "lint:fix": "npx eslint . --ext .mjs --fix --max-warnings=0",
     "serve": "lite-server --baseDir='examples'",
     "start": "npm run serve & npm run watch",
-    "watch": "nodemon --ignore dist/ --exec npm run build",
+    "watch": "nodemon --ext mjs,html --exec npm run build",
     "prepare": "husky install"
   },
   "lint-staged": {

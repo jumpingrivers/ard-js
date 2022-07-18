@@ -6,8 +6,8 @@
   "scripts": {
     "test": "npm run build && npx mocha-headless-chrome -f test/testrunner.html",
     "build": "rollup -c",
-    "lint": "npx eslint --ext .mjs --max-warnings=0",
-    "lint:fix": "npx eslint --ext .mjs --fix src/ --max-warnings=0",
+    "lint": "npx eslint . --ext .mjs --max-warnings=0",
+    "lint:fix": "npx eslint . --ext .mjs --fix --max-warnings=0",
     "serve": "lite-server --baseDir='examples'",
     "start": "npm run serve & npm run watch",
     "watch": "nodemon --ignore dist/ --exec npm run build",

@@ -1,8 +1,9 @@
-/* global chartMaker chai, describe, it */
+(function (factory) {
+  typeof define === 'function' && define.amd ? define(factory) :
+  factory();
+})((function () { 'use strict';
 
-(function() {
-  'use strict';
-
+  /* global chartMaker chai, describe, it */
   const { expect } = chai;
   const { createSankey } = chartMaker;
 
@@ -37,5 +38,5 @@
       expect(() => createSankey([], [['a'], ['b'], ['c', 'c']])).to.throw();
     });
   });
-})();
 
+}));

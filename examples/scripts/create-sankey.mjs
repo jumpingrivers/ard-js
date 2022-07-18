@@ -3,4 +3,11 @@ import { getData } from './utils.mjs';
 
 const data = await getData('./data/data.json');
 
-chartMaker.createSankey(data, [1, 2, 3, 4]);
+const sankeySteps = [
+  ['student_type', 'ipeds_race_ethn'],
+  ['college', 'gpa'],
+  ['club'],
+  ['outcome']
+];
+
+chartMaker.createSankey(data, sankeySteps);

@@ -21,7 +21,7 @@ const examplesCopy = {
 };
 
 const examplesScript = {
-  input: 'examples/scripts/create-sankey.mjs',
+  input: 'examples/scripts/src/index.mjs',
   output: {
     file: 'examples/scripts/create-sankey.js',
     format: 'umd',

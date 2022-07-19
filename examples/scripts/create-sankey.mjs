@@ -11,5 +11,5 @@ const sankeySteps = [
 ];
 
 const sankey = chartMaker.createSankey(data, sankeySteps);
-const container = document.querySelector('#viz-container');
+const container = document.querySelector('#sankey-container');
 container.appendChild(sankey.viz);

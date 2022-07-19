@@ -12,7 +12,8 @@ const drawSankey = function(sankeyData) {
     .extent([[10, 10], [990, 990]])
     ();
 
-  const container = create('div');
+  const container = create('div')
+    .style('width', '100%');
 
   const svg = container.append('svg:svg')
     .attr('viewBox', '0 0 1000 1000')

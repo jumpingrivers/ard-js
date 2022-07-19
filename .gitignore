@@ -1,5 +1,6 @@
 .DS_Store
 node_modules/
-sankey-sunburst.js
-sankey-sunburst.js.map
-tests.js
+sankey-sunburst.js*
+create-sankey.js*
+datasets.js*
+tests.js*

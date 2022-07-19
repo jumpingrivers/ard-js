@@ -1,4 +1,4 @@
-import { create } from 'd3-selection';
+import { select } from 'd3-selection';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 
 
@@ -17,10 +17,7 @@ const drawSankey = function(sankeyData) {
     .extent([[10, 10], [990, 990]])
     ();
 
-  const container = create('div')
-    .style('width', '100%');
-
-  const svg = container.append('svg:svg')
+  const svg = select(this.viz).append('svg')
     .attr('viewBox', '0 0 1000 1000')
     .style('width', '100%');
 
@@ -61,8 +58,6 @@ const drawSankey = function(sankeyData) {
     })
     .attr('y', d => (d.y0 + d.y1) / 2)
     .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end');
-
-  return container;
 };
 
 

@@ -11,14 +11,15 @@ const constructFilterFunction = function(filters) {
 };
 
 
-const createObjectifySankeyNodeFunction = function(group) {
+const createObjectifySankeyNodeFunction = function(group, stepNumber) {
   return function([name, entries]) {
     return {
       name: `${name}`,
       id: `${group}${separator}${name}`,
       entries,
       fixedValue: entries.length,
-      group
+      group,
+      stepNumber
     };
   };
 };
@@ -48,9 +49,9 @@ const processData = function(inputData, inputSteps, filters = []) {
 
   const data = inputData.filter(filterFunction);
 
-  const sankeyNodeGroups = steps.map(function(step) {
+  const sankeyNodeGroups = steps.map(function(step, stepNumber) {
     const key = step.find(k => !filterKeySet.has(k)) || step[step.length - 1];
-    const objectifySankeyNode = createObjectifySankeyNodeFunction(key);
+    const objectifySankeyNode = createObjectifySankeyNodeFunction(key, stepNumber);
     return {
       group: key,
       sankeyNodes: flatGroup(data, d => d[key]).map(objectifySankeyNode)
@@ -71,7 +72,7 @@ const processData = function(inputData, inputSteps, filters = []) {
   })
     .flat();
 
-  return({ data, sankeyNodes, sankeyLinks });
+  return({ data, steps, sankeyNodes, sankeyLinks });
 };
 
 

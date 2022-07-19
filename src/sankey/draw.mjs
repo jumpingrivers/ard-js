@@ -3,7 +3,12 @@ import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 
 
 const drawSankey = function(sankeyData) {
-  const { sankeyNodes, sankeyLinks } = sankeyData;
+  const { sankeyNodes, sankeyLinks, steps } = sankeyData;
+  const textOffset = 5;
+
+  const getTextSide = function(d) {
+    return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
+  };
 
   sankey()
     .nodeId(d => d.id)
@@ -19,7 +24,9 @@ const drawSankey = function(sankeyData) {
     .attr('viewBox', '0 0 1000 1000')
     .style('width', '100%');
 
-  svg.selectAll('path')
+  const linkGroup = svg.append('g');
+
+  linkGroup.selectAll('path')
     .data(sankeyLinks)
     .enter()
     .append('path')
@@ -29,7 +36,9 @@ const drawSankey = function(sankeyData) {
     .style('stroke-opacity', '0.25')
     .style('fill', 'none');
 
-  svg.selectAll('rect')
+  const nodeGroup = svg.append('g');
+
+  nodeGroup.selectAll('rect')
     .data(sankeyNodes)
     .enter()
     .append('rect')
@@ -38,6 +47,20 @@ const drawSankey = function(sankeyData) {
     .attr('width', d => d.x1 - d.x0)
     .attr('height', d => d.y1 - d.y0)
     .style('fill', '#add8e6');
+
+  const textGroup = svg.append('g')
+    .style('pointer-events', 'none');
+
+  textGroup.selectAll('text')
+    .data(sankeyNodes)
+    .enter()
+    .append('text')
+    .text(d => d.name)
+    .attr('x', function(d) { 
+      return getTextSide(d) === 'right' ? d.x1 + textOffset : d.x0 - textOffset;
+    })
+    .attr('y', d => (d.y0 + d.y1) / 2)
+    .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end');
 
   return container;
 };

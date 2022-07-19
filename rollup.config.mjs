@@ -1,6 +1,12 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import json from '@rollup/plugin-json';
 
+
+const onWarn = function(warning, warn) {
+  if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+  warn(warning);
+};
+
 const distOutput = {
   file: 'dist/sankey-sunburst.js',
   format: 'umd',
@@ -11,13 +17,15 @@ const distOutput = {
 const distCopy =  {
   input: 'src/index.mjs',
   output: distOutput,
-  plugins: [nodeResolve()]
+  plugins: [nodeResolve()],
+  onwarn: onWarn
 };
 
 const examplesCopy = {
   input: 'src/index.mjs',
   output: Object.assign({}, distOutput, { file: 'examples/scripts/sankey-sunburst.js' }),
-  plugins: [nodeResolve()]
+  plugins: [nodeResolve()],
+  onwarn: onWarn
 };
 
 const examplesScript = {
@@ -27,7 +35,8 @@ const examplesScript = {
     format: 'umd',
     sourcemap: true
   },
-  plugins: [nodeResolve(), json()]
+  plugins: [nodeResolve(), json()],
+  onwarn: onWarn
 };
 
 const testData = {
@@ -38,7 +47,8 @@ const testData = {
     name: 'datasets',
     sourcemap: true,
   },
-  plugins: [nodeResolve(), json()]
+  plugins: [nodeResolve(), json()],
+  onwarn: onWarn
 };
 
 const testScript = {
@@ -48,7 +58,8 @@ const testScript = {
     format: 'umd',
     sourcemap: true
   },
-  plugins: [nodeResolve()]
+  plugins: [nodeResolve()],
+  onwarn: onWarn
 };
 
 

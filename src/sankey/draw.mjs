@@ -4,6 +4,7 @@ import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 
 const drawSankey = function(sankeyData) {
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
+  const container = select(this.viz);
   const textOffset = 5;
   const width = 1000;
   const height = width / this.aspect();
@@ -13,6 +14,9 @@ const drawSankey = function(sankeyData) {
     return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
   };
 
+  // Clear the container of everything;
+  container.text('');
+
   sankey()
     .nodeId(d => d.id)
     .nodes(sankeyNodes)
@@ -20,7 +24,7 @@ const drawSankey = function(sankeyData) {
     .extent([[padding, padding], [width - padding, height - padding]])
     ();
 
-  const svg = select(this.viz).append('svg')
+  const svg = container.append('svg')
     .attr('viewBox', `0 0 ${width} ${height}`)
     .style('width', '100%');
 

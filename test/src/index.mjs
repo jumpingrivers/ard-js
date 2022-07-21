@@ -113,6 +113,10 @@ describe('sankey.render', function() {
     expect(blankSankey.render()).to.equal(blankSankey);
     expect(sankey.render()).to.equal(sankey);
   });
+
+  it('should not throw if called a second time', function() {
+    expect(() => sankey.render().render()).to.not.throw(sankey);
+  });
 });
 
 

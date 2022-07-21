@@ -64,7 +64,8 @@ const drawSankey = function(sankeyData) {
       return getTextSide(d) === 'right' ? d.x1 + textOffset : d.x0 - textOffset;
     })
     .attr('y', d => (d.y0 + d.y1) / 2)
-    .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end');
+    .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end')
+    .attr('dominant-baseline', 'middle');
 };
 
 

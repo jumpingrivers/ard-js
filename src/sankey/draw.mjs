@@ -1,5 +1,6 @@
 import { select } from 'd3-selection';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
+import { v4 as uuid } from 'uuid';
 
 
 const drawSankey = function(sankeyData) {
@@ -9,6 +10,11 @@ const drawSankey = function(sankeyData) {
   const width = 1000;
   const height = width / this.aspect();
   const padding = 10;
+  const id = uuid();
+
+  const createId = function(str = '') {
+    return `${id}-${str}`;
+  };
 
   const getTextSide = function(d) {
     return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
@@ -25,10 +31,15 @@ const drawSankey = function(sankeyData) {
     ();
 
   const svg = container.append('svg')
+    .attr('id', id)
     .attr('viewBox', `0 0 ${width} ${height}`)
     .style('width', '100%');
 
-  const linkGroup = svg.append('g');
+  const baseLayer = svg.append('g')
+    .attr('id', createId('base-layer'));
+
+  const linkGroup = baseLayer.append('g')
+    .attr('id', createId('base-link-group'));
 
   linkGroup.selectAll('path')
     .data(sankeyLinks)
@@ -40,7 +51,8 @@ const drawSankey = function(sankeyData) {
     .style('stroke-opacity', '0.25')
     .style('fill', 'none');
 
-  const nodeGroup = svg.append('g');
+  const nodeGroup = baseLayer.append('g')
+    .attr('id', createId('base-node-group'));
 
   nodeGroup.selectAll('rect')
     .data(sankeyNodes)
@@ -52,8 +64,9 @@ const drawSankey = function(sankeyData) {
     .attr('height', d => d.y1 - d.y0)
     .style('fill', '#add8e6');
 
-  const textGroup = svg.append('g')
-    .style('pointer-events', 'none');
+  const textGroup = baseLayer.append('g')
+    .style('pointer-events', 'none')
+    .attr('id', createId('base-text-group'));
 
   textGroup.selectAll('text')
     .data(sankeyNodes)

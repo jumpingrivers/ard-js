@@ -8,6 +8,7 @@ import { drawSankey } from './draw.mjs';
 const createSankey = function(initData, initSteps) {
   const instance = {};
   let data, steps;
+  let aspect = 1.25;
 
   if (data) { validateData(data); }
   if (steps) { validateSteps(steps); }
@@ -45,6 +46,19 @@ const createSankey = function(initData, initSteps) {
   if (properlyDefined(initSteps)) { setSteps(initSteps); }
 
   addReadOnlyProp('steps', steps => (steps === undefined) ? getSteps() : setSteps(steps));
+
+  // The aspect ratio
+  const getAspect = () => aspect;
+
+  const setAspect = function(a) {
+    if (!Number.isFinite(a) || a <= 0) {
+      throw new Error('aspect must be a number greater than 0');
+    }
+    aspect = a;
+    return instance;
+  };
+
+  addReadOnlyProp('aspect', aspect => (aspect === undefined) ? getAspect() : setAspect(aspect));
 
   // The rendering function
   const render = function() {

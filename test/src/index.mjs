@@ -65,7 +65,7 @@ describe('sankey.data', function() {
     expect(() => sankey.data('[]')).to.throw();
   });
 
-  it ('should return the instance if appropriate array passed in', function() {
+  it('should return the instance if appropriate array passed in', function() {
     expect(blankSankey.data(data)).to.equal(blankSankey);
   });
 
@@ -88,7 +88,7 @@ describe('sankey.steps', function() {
     expect(() => sankey.steps('[]')).to.throw();
   });
 
-  it ('should return the instance if appropriate array passed in', function() {
+  it('should return the instance if appropriate array passed in', function() {
     expect(blankSankey.steps(steps)).to.equal(blankSankey);
   });
 
@@ -100,7 +100,7 @@ describe('sankey.steps', function() {
 
 
 describe('sankey.render', function() {
-  it ('should warn if data or steps have not been defined', function() {
+  it('should warn if data or steps have not been defined', function() {
     const stub = sinon.stub(console, 'warn');
     blankSankey.render();
     createSankey(data).render();
@@ -109,7 +109,7 @@ describe('sankey.render', function() {
     stub.restore();
   });
 
-  it ('should return the instance after being called', function() {
+  it('should return the instance after being called', function() {
     expect(blankSankey.render()).to.equal(blankSankey);
     expect(sankey.render()).to.equal(sankey);
   });
@@ -117,16 +117,47 @@ describe('sankey.render', function() {
 
 
 describe('sankey.viz', function() {
-  it ('should always hold a div', function() {
+  it('should always hold a div', function() {
     expect(sankey.viz.tagName.toLowerCase()).to.equal('div');
     expect(sankey.render().viz.tagName.toLowerCase()).to.equal('div');
   });
 
-  it ('should hold an empty div if no rendering has taken place', function() {
+  it('should hold an empty div if no rendering has taken place', function() {
     expect(sankey.viz.childNodes.length).to.equal(0);
   });
 
-  it ('should hold an div containing an SVG if rendering has taken place', function() {
+  it('should hold an div containing an SVG if rendering has taken place', function() {
     expect(sankey.render().viz.querySelector('svg') instanceof Element).to.equal(true);
+  });
+});
+
+
+describe('sankey.aspect', function() {
+  it('should throw if passed an argument other than a number or undefined', function() {
+    expect(() => sankey.aspect(null)).to.throw();
+    expect(() => sankey.aspect({})).to.throw();
+    expect(() => sankey.aspect([])).to.throw();  
+  });
+
+  it('should throw if passed a number less than or equal to 0', function() {
+    expect(() => sankey.aspect(0)).to.throw();
+    expect(() => sankey.aspect(-1)).to.throw();
+  });
+
+  it('should throw if passed a non-finite number', function() {
+    expect(() => sankey.aspect(NaN)).to.throw();
+    expect(() => sankey.aspect(Infinity)).to.throw();
+  });
+
+  it('should return the instance if passed a number bigger than 0', function() {
+    expect(sankey.aspect(2)).to.equal(sankey);
+  });
+
+  it('should update the stores aspect if passed a number bigger then 0', function() {
+    expect(sankey.aspect(2).aspect()).to.equal(2);
+  });
+
+  it('should default to 1.25', function() {
+    expect(sankey.aspect()).to.equal(1.25);
   });
 });

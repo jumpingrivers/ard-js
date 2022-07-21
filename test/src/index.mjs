@@ -1,11 +1,22 @@
-/* global chartMaker, datasets, chai, describe, it */
+/* global chartMaker, datasets, chai, describe, it, beforeEach */
 const { expect } = chai;
 const { createSankey } = chartMaker;
 const { data, steps } = datasets;
 
+
 const isObject = function(entity) {
   return entity instanceof Object && !Array.isArray(entity);
 };
+
+
+let blankSankey, sankey;
+
+
+beforeEach(function() {
+  blankSankey = createSankey();
+  sankey = createSankey(data, steps);
+});
+
 
 describe('createSankey', function() {
   it('should throw if data argument is not an array, undefined or null', function() {
@@ -38,5 +49,51 @@ describe('createSankey', function() {
 
   it('should return an object if initialised properly', function() {
     expect(isObject(createSankey(data, steps))).to.equal(true);
+  });
+});
+
+
+describe('sankey.data', function() {
+  it('should throw if argument is not an array or undefined', function() {
+    expect(() => blankSankey.data(null)).to.throw();
+    expect(() => blankSankey.data(7)).to.throw();
+    expect(() => blankSankey.data({})).to.throw();
+    expect(() => blankSankey.data('[]')).to.throw();
+    expect(() => sankey.data(null)).to.throw();
+    expect(() => sankey.data(7)).to.throw();
+    expect(() => sankey.data({})).to.throw();
+    expect(() => sankey.data('[]')).to.throw();
+  });
+
+  it ('should return the instance if appropriate array passed in', function() {
+    expect(blankSankey.data(data)).to.equal(blankSankey);
+  });
+
+  it('should return the stored data if no argument passed in', function() {
+    expect(blankSankey.data()).to.equal(undefined);
+    expect(sankey.data()).to.equal(data);
+  });
+});
+
+
+describe('sankey.steps', function() {
+  it('should throw if argument is not an array or undefined', function() {
+    expect(() => blankSankey.steps(null)).to.throw();
+    expect(() => blankSankey.steps(7)).to.throw();
+    expect(() => blankSankey.steps({})).to.throw();
+    expect(() => blankSankey.steps('[]')).to.throw();
+    expect(() => sankey.steps(null)).to.throw();
+    expect(() => sankey.steps(7)).to.throw();
+    expect(() => sankey.steps({})).to.throw();
+    expect(() => sankey.steps('[]')).to.throw();
+  });
+
+  it ('should return the instance if appropriate array passed in', function() {
+    expect(blankSankey.steps(steps)).to.equal(blankSankey);
+  });
+
+  it('should return the stored steps if no argument passed in', function() {
+    expect(blankSankey.steps()).to.equal(undefined);
+    expect(sankey.steps()).to.equal(steps);
   });
 });

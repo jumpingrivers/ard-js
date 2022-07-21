@@ -114,3 +114,19 @@ describe('sankey.render', function() {
     expect(sankey.render()).to.equal(sankey);
   });
 });
+
+
+describe('sankey.viz', function() {
+  it ('should always hold a div', function() {
+    expect(sankey.viz.tagName.toLowerCase()).to.equal('div');
+    expect(sankey.render().viz.tagName.toLowerCase()).to.equal('div');
+  });
+
+  it ('should hold an empty div if no rendering has taken place', function() {
+    expect(sankey.viz.childNodes.length).to.equal(0);
+  });
+
+  it ('should hold an div containing an SVG if rendering has taken place', function() {
+    expect(sankey.render().viz.querySelector('svg') instanceof Element).to.equal(true);
+  });
+});

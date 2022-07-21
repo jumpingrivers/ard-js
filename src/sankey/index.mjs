@@ -48,8 +48,16 @@ const createSankey = function(initData, initSteps) {
 
   // The rendering function
   const render = function() {
-    const sankeyData = processData(data, steps);
-    drawSankey.call(instance, sankeyData);
+    if (!data) {
+      console.warn('Could not render anything as no data defined');
+    }
+    else if (!steps) {
+      console.warn('Could not render anything as no steps defined');
+    }
+    else {
+      const sankeyData = processData(data, steps);
+      drawSankey.call(instance, sankeyData);
+    }
     return instance;
   };
 

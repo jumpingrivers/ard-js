@@ -1,4 +1,4 @@
-/* global chartMaker, datasets, chai, describe, it, beforeEach */
+/* global chartMaker, datasets, describe, it, beforeEach, chai, sinon */
 const { expect } = chai;
 const { createSankey } = chartMaker;
 const { data, steps } = datasets;
@@ -95,5 +95,22 @@ describe('sankey.steps', function() {
   it('should return the stored steps if no argument passed in', function() {
     expect(blankSankey.steps()).to.equal(undefined);
     expect(sankey.steps()).to.equal(steps);
+  });
+});
+
+
+describe('sankey.render', function() {
+  it ('should warn if data or steps have not been defined', function() {
+    const stub = sinon.stub(console, 'warn');
+    blankSankey.render();
+    createSankey(data).render();
+    blankSankey.steps(steps).render();
+    expect(stub).to.have.callCount(3);
+    stub.restore();
+  });
+
+  it ('should return the instance after being called', function() {
+    expect(blankSankey.render()).to.equal(blankSankey);
+    expect(sankey.render()).to.equal(sankey);
   });
 });

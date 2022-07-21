@@ -6,7 +6,7 @@ const separator = ':---:';
 const constructFilterFunction = function(filters) {
   if (!filters.length) { return () => true; }
   return function(d) {
-    return filters.every(({key, value}) => d[key] === value);
+    return filters.every(({key, value}) => `${d[key]}` === value);
   };
 };
 
@@ -27,11 +27,16 @@ const createObjectifySankeyNodeFunction = function(group, stepNumber) {
 
 const createObjectifySankeyLinkFunction = function(sourceGroup, targetGroup) {
   return function([sourceName, targetName, entries]) {
+    const source = `${sourceGroup}${separator}${sourceName}`;
+    const target = `${targetGroup}${separator}${targetName}`;
     return {
       sourceName: `${sourceName}`,
       targetName: `${targetName}`,
-      source: `${sourceGroup}${separator}${sourceName}`,
-      target: `${targetGroup}${separator}${targetName}`,
+      source,
+      target,
+      sourceId: source,
+      targetId: target,
+      id: `${source}${separator}${target}`,
       entries,
       value: entries.length
     };
@@ -49,12 +54,15 @@ const processData = function(inputData, inputSteps, filters = []) {
 
   const data = inputData.filter(filterFunction);
 
-  const sankeyNodeGroups = steps.map(function(step, stepNumber) {
-    const key = step.find(k => !filterKeySet.has(k)) || step[step.length - 1];
-    const objectifySankeyNode = createObjectifySankeyNodeFunction(key, stepNumber);
+  const currentStepNames = steps.map(function(step) {
+    return step.find(k => !filterKeySet.has(k)) || step[step.length - 1];
+  });
+
+  const sankeyNodeGroups = currentStepNames.map(function(stepName, stepNumber) {
+    const objectifySankeyNode = createObjectifySankeyNodeFunction(stepName, stepNumber);
     return {
-      group: key,
-      sankeyNodes: flatGroup(data, d => d[key]).map(objectifySankeyNode)
+      group: stepName,
+      sankeyNodes: flatGroup(data, d => d[stepName]).map(objectifySankeyNode)
     };
   });
 
@@ -72,7 +80,7 @@ const processData = function(inputData, inputSteps, filters = []) {
   })
     .flat();
 
-  return({ data, steps, sankeyNodes, sankeyLinks });
+  return({ data, steps, sankeyNodes, sankeyLinks, currentStepNames });
 };
 
 

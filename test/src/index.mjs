@@ -130,8 +130,9 @@ describe('sankey.viz', function() {
     expect(sankey.viz.childNodes.length).to.equal(0);
   });
 
-  it('should hold an div containing an SVG if rendering has taken place', function() {
-    expect(sankey.render().viz.querySelector('svg') instanceof Element).to.equal(true);
+  it('should hold a div containing an SVG in its shadow dom if rendering has taken place', function() {
+    const shadow = sankey.render().viz.shadowRoot;
+    expect(shadow.querySelector('svg') instanceof Element).to.equal(true);
   });
 });
 

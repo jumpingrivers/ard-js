@@ -1,7 +1,6 @@
 import { select } from 'd3-selection';
 import 'd3-transition';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
-import { v4 as uuid } from 'uuid';
 import { processData } from './process-data.mjs';
 
 const linkOpacity = 0.25;
@@ -9,10 +8,8 @@ const baseLinkOpacityOnHover = 0.5;
 const animationDuration = 1000;
 
 
-const _createId = function(suffix) {
-  return function(str = '') {
-    return `${str}-${suffix}`;
-  };
+const getSvg = function(instance) {
+  return select(instance.viz.shadowRoot).select('svg');
 };
 
 
@@ -36,14 +33,12 @@ const drawLink = function(selection, hover) {
 
 
 const drawNodeHover = function(hoveredNode, hoverData, lookup) {
-  const container = select(this.viz);
-  const svg = container.select('svg');
-  const createId = _createId(svg.datum().suffix);
+  const svg = getSvg(this);
   const nSteps = hoverData.steps.length;
   const hoveredNodeData = hoveredNode.datum();
   const { id, stepNumber } = hoveredNodeData;
-  const hoverNodeGroup = select(`#${createId('hover-node-group')}`);
-  const hoverLinkGroup = select(`#${createId('hover-link-group')}`);
+  const hoverNodeGroup = svg.select('#hover-node-group');
+  const hoverLinkGroup = svg.select('#hover-link-group');
 
   const hoverNodes = hoverNodeGroup.selectAll('rect')
     .data(hoverData.sankeyNodes)
@@ -169,14 +164,12 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
 
 
 const drawLinkHover = function(hoveredLink, hoverData, lookup) {
-  const container = select(this.viz);
-  const svg = container.select('svg');
-  const createId = _createId(svg.datum().suffix);
+  const svg = getSvg(this);
   const nSteps = hoverData.steps.length;
   const hoveredLinkData = hoveredLink.datum();
-  const { id, sourceId, targetId, entries} = hoveredLinkData;
-  const hoverNodeGroup = select(`#${createId('hover-node-group')}`);
-  const hoverLinkGroup = select(`#${createId('hover-link-group')}`);
+  const { id, sourceId, targetId, entries } = hoveredLinkData;
+  const hoverNodeGroup = svg.select('#hover-node-group');
+  const hoverLinkGroup = svg.select('#hover-link-group');
 
   const hoverNodes = hoverNodeGroup.selectAll('rect')
     .data(hoverData.sankeyNodes)
@@ -304,21 +297,19 @@ const drawSankey = function(sankeyData) {
   const instance = this;
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
   const container = select(instance.viz);
+  const shadow = select(container.node().shadowRoot);
   const textOffset = 5;
   const width = 1000;
   const height = width / instance.aspect();
   const padding = 10;
-  const suffix = uuid();
   const lookup = {};
-
-  const createId = _createId(suffix);
 
   const getTextSide = function(d) {
     return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
   };
 
   // Clear the container of everything;
-  container.text('');
+  shadow.text('');
 
   sankey()
     .nodeId(d => d.id)
@@ -327,17 +318,15 @@ const drawSankey = function(sankeyData) {
     .extent([[padding, padding], [width - padding, height - padding]])
     ();
 
-  const svg = container.append('svg')
-    .datum({suffix})
-    .attr('id', createId('svg'))
+  const svg = shadow.append('svg')
     .attr('viewBox', `0 0 ${width} ${height}`)
     .style('width', '100%');
 
   const baseLayer = svg.append('g')
-    .attr('id', createId('base-layer'));
+    .attr('id', 'base-layer');
 
   const linkGroup = baseLayer.append('g')
-    .attr('id', createId('base-link-group'));
+    .attr('id', 'base-link-group');
 
   linkGroup.selectAll('path')
     .data(sankeyLinks)
@@ -358,7 +347,7 @@ const drawSankey = function(sankeyData) {
     });
 
   const nodeGroup = baseLayer.append('g')
-    .attr('id', createId('base-node-group'));
+    .attr('id', 'base-node-group');
 
   nodeGroup.selectAll('rect')
     .data(sankeyNodes)
@@ -380,7 +369,7 @@ const drawSankey = function(sankeyData) {
 
   const textGroup = baseLayer.append('g')
     .style('pointer-events', 'none')
-    .attr('id', createId('base-text-group'));
+    .attr('id', 'base-text-group');
 
   textGroup.selectAll('text')
     .data(sankeyNodes)
@@ -395,14 +384,14 @@ const drawSankey = function(sankeyData) {
     .attr('dominant-baseline', 'middle');
 
   const hoverLayer = svg.append('g')
-    .attr('id', createId('hover-layer'))
+    .attr('id', 'hover-layer')
     .style('pointer-events', 'none');
 
   const hoverLinkGroup = hoverLayer.append('g')
-    .attr('id', createId('hover-link-group'));
+    .attr('id', 'hover-link-group');
   
   const hoverNodeGroup = hoverLayer.append('g')
-    .attr('id', createId('hover-node-group'));
+    .attr('id', 'hover-node-group');
 };
 
 

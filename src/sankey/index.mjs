@@ -1,4 +1,4 @@
-import { create } from 'd3-selection';
+import { create, select } from 'd3-selection';
 import { _addReadOnlyProp, properlyDefined } from '../utils/index.mjs';
 import { validateData, validateSteps } from './validate.mjs';
 import { processData } from './process-data.mjs';
@@ -18,6 +18,8 @@ const createSankey = function(initData, initSteps) {
   // The viz container
   const container = create('div')
     .style('width', '100%');
+
+  select(container.node().attachShadow({mode: 'open'}));
 
   addReadOnlyProp('viz', container.node());
 

@@ -166,6 +166,137 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
 };
 
 
+const drawLinkHover = function(hoveredLink, hoverData, lookup) {
+  const container = select(this.viz);
+  const svg = container.select('svg');
+  const createId = _createId(svg.datum().suffix);
+  const nSteps = hoverData.steps.length;
+  const hoveredLinkData = hoveredLink.datum();
+  const { id, sourceId, targetId, entries} = hoveredLinkData;
+  const hoverNodeGroup = select(`#${createId('hover-node-group')}`);
+  const hoverLinkGroup = select(`#${createId('hover-link-group')}`);
+
+  const hoverNodes = hoverNodeGroup.selectAll('rect')
+    .data(hoverData.sankeyNodes)
+    .enter()
+    .append('rect')
+    .each(function(d) {
+      const ud = select(`#${lookup[d.id]}`).datum();
+
+      const data = {
+        id: d.id,
+        entries: d.entries,
+        stepNumber: d.stepNumber, 
+        countInUsed: d.stepNumber ? 0 : d.entries.length,
+        countOutUsed: d.stepNumber  < nSteps - 1 ? 0 : d.entries.length
+      };
+
+      if (d.id === sourceId) {
+        const halfHeight = hoveredLinkData.width / 2;
+        const midpoint = hoveredLinkData.y0;
+        data.x0 = ud.x0;
+        data.x1 = ud.x1;
+        data.y0 = midpoint - halfHeight;
+        data.y1 = midpoint + halfHeight;
+        d.countOutUsed = entries.length;
+      }
+      else if (d.id === targetId) {
+        const halfHeight = hoveredLinkData.width / 2;
+        const midpoint = hoveredLinkData.y1;
+        data.x0 = ud.x0;
+        data.x1 = ud.x1;
+        data.y0 = midpoint - halfHeight;
+        data.y1 = midpoint + halfHeight;
+        d.countInUsed = entries.length;
+      }
+
+      select(this).datum(data);
+    });
+
+  const hoveredNodeLookup = hoverNodes.data().reduce(function(obj, d) {
+    obj[d.id] = d;
+    return obj;
+  }, {});
+
+  const hoverLinks = hoverLinkGroup.selectAll('path')
+    .data(hoverData.sankeyLinks)
+    .enter()
+    .append('path')
+    .each(function(d) {
+      if (d.id === id) {
+        select(this).datum(select(`#${lookup[id]}`).datum());
+      }
+    });
+
+  hoverNodes.filter(function(d) {
+    const s = d.stepNumber;
+    return s < hoveredLinkData.source.stepNumber || s > hoveredLinkData.target.stepNumber;
+  })
+    .each(function(d) {
+      const ud = select(`#${lookup[d.id]}`).datum();
+      const midpoint = (ud.y1 + ud.y0) / 2;
+      const oldHeight = ud.y1 - ud.y0;
+      const newHeight = oldHeight * (d.entries.length / ud.entries.length);
+
+      d.x0 = ud.x0;
+      d.x1 = ud.x1;
+      d.y0 = midpoint - newHeight / 2;
+      d.y1 = midpoint + newHeight / 2;
+    });
+
+  const addLinkLeft = function(link, source) {
+    const countUsed = source.countOutUsed;
+    const singleCountHeight = (source.y1 - source.y0) / source.entries.length;
+    const count = link.entries.length;
+    const height = count * singleCountHeight;
+    const top = source.y0 + (countUsed * singleCountHeight);
+    link.source = source;
+    link.y0 = top + height / 2;
+    link.width = height;
+    source.countOutUsed += count;
+  };
+
+  const addLinkRight = function(link, target) {
+    const countUsed = target.countInUsed;
+    const singleCountHeight = (target.y1 - target.y0) / target.entries.length;
+    const count = link.entries.length;
+    const height = count * singleCountHeight;
+    const top = target.y0 + (countUsed * singleCountHeight);
+    link.target = target;
+    link.y1 = top + height / 2;
+    target.countInUsed += count;
+  };
+
+  const sourceToLinkAndTarget = hoverLinks.data().reduce(function(obj, d) {
+    if (!obj[d.sourceId]) { obj[d.sourceId] = []; }
+    obj[d.sourceId].push( {link: d, target: hoveredNodeLookup[d.targetId] });
+    return obj;
+  }, {});
+
+  Object.values(sourceToLinkAndTarget).forEach(function(arr) {
+    arr.sort((a, b) => a.target.y0 - b.target.y0);
+  });
+
+  hoverNodes.filter(function(d) {
+    const {source, target} = hoveredLinkData;
+    return d.stepNumber < source.stepNumber || (d.stepNumber >= target.stepNumber && (d.stepNumber < nSteps - 1));
+  })
+    .data()
+    .sort((a, b) => a.y0 - b.y0)
+    .forEach(function(source) {
+      sourceToLinkAndTarget[source.id].forEach(function({link, target}) {
+        addLinkLeft(link, source);
+        addLinkRight(link, target);
+      });
+    });
+
+  hoverNodes.filter(d => d.x0 !== undefined)
+    .call(drawNode, true);
+  
+  hoverLinks.filter(d => d.width !== undefined)
+    .call(drawLink, true);
+};
+
 const drawSankey = function(sankeyData) {
   const instance = this;
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
@@ -214,7 +345,17 @@ const drawSankey = function(sankeyData) {
       lookup[d.id] = id;
       return id;
     })
-    .call(drawLink);
+    .call(drawLink)
+    .on('mouseover', function(_, d) {
+      linkGroup.interrupt().style('opacity', null);
+      const filter = [d.source, d.target].map(d => ({ key: d.group, value: d.name }));
+      const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
+      drawLinkHover.call(instance, select(this), hoverData, lookup);
+    })
+    .on('mouseout', function() {
+      hoverNodeGroup.text('');
+      hoverLinkGroup.text('');
+    });
 
   const nodeGroup = baseLayer.append('g')
     .attr('id', createId('base-node-group'));

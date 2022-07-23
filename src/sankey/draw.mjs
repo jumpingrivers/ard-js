@@ -50,7 +50,7 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
     .enter()
     .append('rect')
     .each(function(d) {
-      const ud = select(`#${lookup[d.id]}`).datum();
+      const ud = select(lookup[d.id]).datum();
 
       const data = {
         id: d.id,
@@ -84,7 +84,7 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
 
   hoverLinks.filter(d => [d.sourceId, d.targetId].includes(id))
     .each(function(d) {
-      const ld = select(`#${lookup[d.id]}`).datum();
+      const ld = select(lookup[d.id]).datum();
       // Effectively copy these links from the base layer to the hover layer
       select(this)
         .datum(Object.assign({}, ld));
@@ -107,7 +107,7 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
 
   hoverNodes.filter(d => Math.abs(stepNumber - d.stepNumber) > 1)
     .each(function(d) {
-      const ud = select(`#${lookup[d.id]}`).datum();
+      const ud = select(lookup[d.id]).datum();
       const midpoint = (ud.y1 + ud.y0) / 2;
       const oldHeight = ud.y1 - ud.y0;
       const newHeight = oldHeight * (d.entries.length / ud.entries.length);
@@ -183,7 +183,7 @@ const drawLinkHover = function(hoveredLink, hoverData, lookup) {
     .enter()
     .append('rect')
     .each(function(d) {
-      const ud = select(`#${lookup[d.id]}`).datum();
+      const ud = select(lookup[d.id]).datum();
 
       const data = {
         id: d.id,
@@ -226,7 +226,7 @@ const drawLinkHover = function(hoveredLink, hoverData, lookup) {
     .append('path')
     .each(function(d) {
       if (d.id === id) {
-        select(this).datum(select(`#${lookup[id]}`).datum());
+        select(this).datum(select(lookup[id]).datum());
       }
     });
 
@@ -235,7 +235,7 @@ const drawLinkHover = function(hoveredLink, hoverData, lookup) {
     return s < hoveredLinkData.source.stepNumber || s > hoveredLinkData.target.stepNumber;
   })
     .each(function(d) {
-      const ud = select(`#${lookup[d.id]}`).datum();
+      const ud = select(lookup[d.id]).datum();
       const midpoint = (ud.y1 + ud.y0) / 2;
       const oldHeight = ud.y1 - ud.y0;
       const newHeight = oldHeight * (d.entries.length / ud.entries.length);
@@ -299,6 +299,7 @@ const drawLinkHover = function(hoveredLink, hoverData, lookup) {
     .call(drawLink, true);
 };
 
+
 const drawSankey = function(sankeyData) {
   const instance = this;
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
@@ -342,12 +343,8 @@ const drawSankey = function(sankeyData) {
     .data(sankeyLinks)
     .enter()
     .append('path')
-    .attr('id', function(d) {
-      const id = createId(`link-${uuid()}`);
-      lookup[d.id] = id;
-      return id;
-    })
     .call(drawLink)
+    .each(function(d) { lookup[d.id] = this; })
     .on('mouseover', function(_, d) {
       linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
       const filter = [d.source, d.target].map(d => ({ key: d.group, value: d.name }));
@@ -367,12 +364,8 @@ const drawSankey = function(sankeyData) {
     .data(sankeyNodes)
     .enter()
     .append('rect')
-    .attr('id', function(d) {
-      const id = createId(`node-${uuid()}`);
-      lookup[d.id] = id;
-      return id;
-    })
     .call(drawNode)
+    .each(function(d) { lookup[d.id] = this; })
     .on('mouseover', function(_, d) {
       linkGroup.interrupt().style('opacity', baseLinkOpacityOnHover);
       const filter = { key: d.group, value: d.name};

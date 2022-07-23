@@ -4,6 +4,8 @@ import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 import { v4 as uuid } from 'uuid';
 import { processData } from './process-data.mjs';
 
+const linkOpacity = 0.25;
+const baseLinkOpacityOnHover = 0.5;
 const animationDuration = 1000;
 
 
@@ -28,7 +30,7 @@ const drawLink = function(selection, hover) {
   selection.attr('d', sankeyLinkHorizontal())
     .attr('stroke-width', d => d.width)
     .style('stroke', hover ? 'red' : '#add8e6')
-    .style('stroke-opacity', '0.25')
+    .style('stroke-opacity', linkOpacity)
     .style('fill', 'none');
 };
 
@@ -347,12 +349,13 @@ const drawSankey = function(sankeyData) {
     })
     .call(drawLink)
     .on('mouseover', function(_, d) {
-      linkGroup.interrupt().style('opacity', null);
+      linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
       const filter = [d.source, d.target].map(d => ({ key: d.group, value: d.name }));
       const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
       drawLinkHover.call(instance, select(this), hoverData, lookup);
     })
     .on('mouseout', function() {
+      linkGroup.interrupt().transition().duration(animationDuration).style('opacity', 1);
       hoverNodeGroup.text('');
       hoverLinkGroup.text('');
     });
@@ -371,13 +374,13 @@ const drawSankey = function(sankeyData) {
     })
     .call(drawNode)
     .on('mouseover', function(_, d) {
-      linkGroup.interrupt().style('opacity', 0);
+      linkGroup.interrupt().style('opacity', baseLinkOpacityOnHover);
       const filter = { key: d.group, value: d.name};
       const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, [filter]);
       drawNodeHover.call(instance, select(this), hoverData, lookup);
     })
     .on('mouseout', function() {
-      linkGroup.transition().duration(animationDuration).style('opacity', 1);
+      linkGroup.interrupt().transition().duration(animationDuration).style('opacity', 1);
       hoverNodeGroup.text('');
       hoverLinkGroup.text('');
     });

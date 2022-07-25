@@ -35,10 +35,21 @@ const drawLink = function(selection, hover) {
 const drawNodeHover = function(hoveredNode, hoverData, lookup) {
   const svg = getSvg(this);
   const nSteps = hoverData.steps.length;
-  const hoveredNodeData = hoveredNode.datum();
-  const { id, stepNumber } = hoveredNodeData;
+  const id = hoveredNode.datum().id;
   const hoverNodeGroup = svg.select('#hover-node-group');
   const hoverLinkGroup = svg.select('#hover-link-group');
+
+  const offCenterNodes = new Map();
+
+  hoverData.sankeyLinks.forEach(function(d) {
+    if ([d.sourceId, d.targetId].includes(id)) {
+      const ud = select(lookup[d.id]).datum();
+      const findingSource = d.sourceId !== id;
+      const nodeId = findingSource ? d.sourceId : d.targetId;
+      const midpoint = findingSource ? ud.y0 : ud.y1;
+      offCenterNodes.set(nodeId, midpoint);
+    }
+  });
 
   const hoverNodes = hoverNodeGroup.selectAll('rect')
     .data(hoverData.sankeyNodes)
@@ -46,23 +57,21 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
     .append('rect')
     .each(function(d) {
       const ud = select(lookup[d.id]).datum();
+      const midpoint = offCenterNodes.has(d.id) ? offCenterNodes.get(d.id) : (ud.y1 + ud.y0) / 2; 
+      const oldHeight = ud.y1 - ud.y0;
+      const height = oldHeight * (d.entries.length / ud.entries.length);
 
       const data = {
         id: d.id,
         x0: ud.x0,
         x1: ud.x1,
+        y0: midpoint - height / 2,
+        y1: midpoint + height / 2,
         entries: d.entries,
         stepNumber: d.stepNumber, 
         countInUsed: d.stepNumber ? 0 : d.entries.length,
         countOutUsed: d.stepNumber  < nSteps - 1 ? 0 : d.entries.length
       };
-
-      if (d.id === id) {
-        data.y0 = ud.y0;
-        data.y1 = ud.y1;
-        d.countInUsed = d.entries.length;
-        d.countOutUsed = d.entries.length;
-      }
 
       select(this).datum(data);
     });
@@ -72,46 +81,17 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
     return obj;
   }, {});
 
-  const hoverLinks = hoverLinkGroup.selectAll('path')
-    .data(hoverData.sankeyLinks)
-    .enter()
-    .append('path');
+  const sourceToLinkAndTarget = hoverData.sankeyLinks.reduce(function(obj, d) {
+    if (!obj[d.sourceId]) { obj[d.sourceId] = []; }
+    obj[d.sourceId].push( {link: d, target: hoveredNodeLookup[d.targetId] });
+    return obj;
+  }, {});
 
-  hoverLinks.filter(d => [d.sourceId, d.targetId].includes(id))
-    .each(function(d) {
-      const ld = select(lookup[d.id]).datum();
-      // Effectively copy these links from the base layer to the hover layer
-      select(this)
-        .datum(Object.assign({}, ld));
+  Object.values(sourceToLinkAndTarget).forEach(function(arr) {
+    arr.sort((a, b) => a.target.y0 - b.target.y0);
+  });
 
-      const halfHeight = ld.width / 2;
-
-      if (d.sourceId !== id) {
-        const data = hoveredNodeLookup[d.sourceId];
-        data.y0 = ld.y0 - halfHeight;
-        data.y1 = ld.y0 + halfHeight;
-        data.countOutUsed = data.entries.length;
-      }
-      else {
-        const data = hoveredNodeLookup[d.targetId];
-        data.y0 = ld.y1 - halfHeight;
-        data.y1 = ld.y1 + halfHeight;
-        data.countInUsed = data.entries.length;
-      }
-    });
-
-  hoverNodes.filter(d => Math.abs(stepNumber - d.stepNumber) > 1)
-    .each(function(d) {
-      const ud = select(lookup[d.id]).datum();
-      const midpoint = (ud.y1 + ud.y0) / 2;
-      const oldHeight = ud.y1 - ud.y0;
-      const newHeight = oldHeight * (d.entries.length / ud.entries.length);
-
-      d.y0 = midpoint - newHeight / 2;
-      d.y1 = midpoint + newHeight / 2;
-    });
-
-  const addLinkLeft = function(link, source) {
+  const addLinkStart = function(link, source) {
     const countUsed = source.countOutUsed;
     const singleCountHeight = (source.y1 - source.y0) / source.entries.length;
     const count = link.entries.length;
@@ -123,7 +103,7 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
     source.countOutUsed += count;
   };
 
-  const addLinkRight = function(link, target) {
+  const addLinkEnd = function(link, target) {
     const countUsed = target.countInUsed;
     const singleCountHeight = (target.y1 - target.y0) / target.entries.length;
     const count = link.entries.length;
@@ -134,31 +114,24 @@ const drawNodeHover = function(hoveredNode, hoverData, lookup) {
     target.countInUsed += count;
   };
 
-  const sourceToLinkAndTarget = hoverLinks.data().reduce(function(obj, d) {
-    if (!obj[d.sourceId]) { obj[d.sourceId] = []; }
-    obj[d.sourceId].push( {link: d, target: hoveredNodeLookup[d.targetId] });
-    return obj;
-  }, {});
-
-  Object.values(sourceToLinkAndTarget).forEach(function(arr) {
-    arr.sort((a, b) => a.target.y0 - b.target.y0);
-  });
+  const hoverLinks = hoverLinkGroup.selectAll('path')
+    .data(hoverData.sankeyLinks)
+    .enter()
+    .append('path');
 
   hoverNodes.filter(function(d) {
-    const diff = d.stepNumber - stepNumber;
-    return diff < -1 || (diff > 0 && (d.stepNumber < nSteps - 1));
+    return d.stepNumber < nSteps - 1;
   })
     .data()
     .sort((a, b) => a.y0 - b.y0)
     .forEach(function(source) {
       sourceToLinkAndTarget[source.id].forEach(function({link, target}) {
-        addLinkLeft(link, source);
-        addLinkRight(link, target);
+        addLinkStart(link, source);
+        addLinkEnd(link, target);
       });
     });
 
   hoverNodes.call(drawNode, true);
-
   hoverLinks.call(drawLink, true);
 };
 

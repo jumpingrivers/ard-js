@@ -1,5 +1,7 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import { string } from 'rollup-plugin-string';
 
 
 const onWarn = function(warning, warn) {
@@ -14,17 +16,25 @@ const distOutput = {
   sourcemap: true
 };
 
+const distPlugins = [
+  nodeResolve(),
+  commonjs(),
+  string({
+    include: ['**/*.html', '**/*.css'],
+  })
+];
+
 const distCopy =  {
   input: 'src/index.mjs',
   output: distOutput,
-  plugins: [nodeResolve()],
+  plugins: distPlugins,
   onwarn: onWarn
 };
 
 const examplesCopy = {
   input: 'src/index.mjs',
   output: Object.assign({}, distOutput, { file: 'examples/scripts/sankey-sunburst.js' }),
-  plugins: [nodeResolve()],
+  plugins: distPlugins,
   onwarn: onWarn
 };
 

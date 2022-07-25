@@ -1,12 +1,18 @@
 import { create, select } from 'd3-selection';
 import 'd3-transition';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
+import Handlebars from 'handlebars';
 import { processData } from './process-data.mjs';
+import nodeTemplateString from './popup-templates/node.html';
+import linkTemplateString from './popup-templates/link.html';
+import popupStyleString from './popup-templates/popup.css';
 
 const linkOpacity = 0.25;
 const baseLinkOpacityOnHover = 0.5;
 const animationDuration = 1000;
 
+const nodeTemplate = Handlebars.compile(nodeTemplateString);
+const linkTemplate = Handlebars.compile(linkTemplateString);
 
 const getSvg = function(instance) {
   return select(instance.viz.shadowRoot).select('svg');
@@ -166,7 +172,8 @@ const getPopupContent = function(instance) {
   return select(popup.node().shadowRoot).select('#popup-content');
 };
 
-const showPopup = function(hoveredElement) {
+
+const showPopup = function(hoveredElement, totalCount) {
   const instance = this;
   const bbox = hoveredElement.node().getBoundingClientRect();
   const popup = getPopup(instance);
@@ -179,12 +186,30 @@ const showPopup = function(hoveredElement) {
   const data = hoveredElement.datum();
   const isLink = data.sourceId !== undefined;
   
-  let name;
-  if (isLink) { name = `${data.sourceName} => ${data.targetName}`; }
-  else { name = data.name; }
-
-  popupContent.text(`${name}: ${data.value}`);
+  if (isLink) {
+    const count = data.entries.length;
+    const sourceCount = data.source.entries.length;
+    const targetCount = data.target.entries.length;
+    const props = {
+      sourceName: data.sourceName,
+      targetName: data.targetName,
+      count,
+      totalCount,
+      percentageOfSourceCount: Math.round((count/sourceCount)*100),
+      percentageOfTargetCount: Math.round((count/targetCount)*100),
+    };
+    popupContent.html(linkTemplate(props));
+  }
+  else {
+    const props = {
+      name: data.name,
+      count: data.entries.length,
+      totalCount
+    };
+    popupContent.html(nodeTemplate(props));
+  }
 };
+
 
 const hidePopup = function() {
   const instance = this;
@@ -251,7 +276,7 @@ const drawSankey = function(sankeyData) {
     }
     const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
     drawHoverLayer.call(instance, select(this), hoverData, lookup);
-    showPopup.call(instance, select(this));
+    showPopup.call(instance, select(this), sankeyData.data.length);
   };
 
   const mouseout = function() {
@@ -296,6 +321,9 @@ const drawSankey = function(sankeyData) {
     .style('position', 'absolute')
     .style('display', 'none');
 
+  const popupStyles = create('style')
+    .text(popupStyleString);
+
   const popupContent = create('div')
     .append('div')
     .attr('id', 'popup-content')
@@ -308,6 +336,7 @@ const drawSankey = function(sankeyData) {
   shadow.appendChild(popup.node());
 
   popup.node().attachShadow({mode: 'open'});
+  popup.node().shadowRoot.appendChild(popupStyles.node());
   popup.node().shadowRoot.appendChild(popupContent.node());
 };
 

@@ -33,11 +33,13 @@ const drawLink = function(selection, hover) {
 
 
 const drawHoverLayer = function(hoveredEntity, hoverData, lookup) {
-  const svg = getSvg(this);
   const nSteps = hoverData.steps.length;
   const { id, sourceId, targetId } = hoveredEntity.datum();
-  const hoverNodeGroup = svg.select('#hover-node-group');
-  const hoverLinkGroup = svg.select('#hover-link-group');
+
+  const svg = getSvg(this);
+  const hoverLayer = svg.select('#hover-layer');
+  const hoverNodeGroup = hoverLayer.append('g');
+  const hoverLinkGroup = hoverLayer.append('g');
 
   const offCenterNodes = new Map();
 
@@ -178,26 +180,44 @@ const drawSankey = function(sankeyData) {
   const linkGroup = baseLayer.append('g')
     .attr('id', 'base-link-group');
 
+  const nodeGroup = baseLayer.append('g')
+    .attr('id', 'base-node-group');
+
+  const textGroup = baseLayer.append('g')
+    .style('pointer-events', 'none')
+    .attr('id', 'base-text-group');
+
+  const hoverLayer = svg.append('g')
+    .attr('id', 'hover-layer')
+    .style('pointer-events', 'none');
+
+  const mouseover = function(_, d) {
+    linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
+    const filter = [];
+    if (d.sourceId) {
+      filter.push({ key: d.source.group, value: d.source.name });
+      filter.push({ key: d.target.group, value: d.target.name });
+    }
+    else {
+      filter.push({ key: d.group, value: d.name });
+    }
+    const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
+    drawHoverLayer.call(instance, select(this), hoverData, lookup);
+  };
+
+  const mouseout = function() {
+    hoverLayer.text('');
+    linkGroup.interrupt().transition().duration(animationDuration).style('opacity', 1);
+  };
+
   linkGroup.selectAll('path')
     .data(sankeyLinks)
     .enter()
     .append('path')
     .call(drawLink)
     .each(function(d) { lookup[d.id] = this; })
-    .on('mouseover', function(_, d) {
-      linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
-      const filter = [d.source, d.target].map(d => ({ key: d.group, value: d.name }));
-      const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
-      drawHoverLayer.call(instance, select(this), hoverData, lookup);
-    })
-    .on('mouseout', function() {
-      linkGroup.interrupt().transition().duration(animationDuration).style('opacity', 1);
-      hoverNodeGroup.text('');
-      hoverLinkGroup.text('');
-    });
-
-  const nodeGroup = baseLayer.append('g')
-    .attr('id', 'base-node-group');
+    .on('mouseover', mouseover)
+    .on('mouseout', mouseout);
 
   nodeGroup.selectAll('rect')
     .data(sankeyNodes)
@@ -205,21 +225,8 @@ const drawSankey = function(sankeyData) {
     .append('rect')
     .call(drawNode)
     .each(function(d) { lookup[d.id] = this; })
-    .on('mouseover', function(_, d) {
-      linkGroup.interrupt().style('opacity', baseLinkOpacityOnHover);
-      const filter = { key: d.group, value: d.name};
-      const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, [filter]);
-      drawHoverLayer.call(instance, select(this), hoverData, lookup);
-    })
-    .on('mouseout', function() {
-      linkGroup.interrupt().transition().duration(animationDuration).style('opacity', 1);
-      hoverNodeGroup.text('');
-      hoverLinkGroup.text('');
-    });
-
-  const textGroup = baseLayer.append('g')
-    .style('pointer-events', 'none')
-    .attr('id', 'base-text-group');
+    .on('mouseover', mouseover)
+    .on('mouseout', mouseout);
 
   textGroup.selectAll('text')
     .data(sankeyNodes)
@@ -232,16 +239,6 @@ const drawSankey = function(sankeyData) {
     .attr('y', d => (d.y0 + d.y1) / 2)
     .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end')
     .attr('dominant-baseline', 'middle');
-
-  const hoverLayer = svg.append('g')
-    .attr('id', 'hover-layer')
-    .style('pointer-events', 'none');
-
-  const hoverLinkGroup = hoverLayer.append('g')
-    .attr('id', 'hover-link-group');
-  
-  const hoverNodeGroup = hoverLayer.append('g')
-    .attr('id', 'hover-node-group');
 };
 
 

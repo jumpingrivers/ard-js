@@ -166,3 +166,45 @@ describe('sankey.aspect', function() {
     expect(sankey.aspect()).to.equal(1.25);
   });
 });
+
+
+describe('sankey.nodePopupTemplate', function() {
+  it('should throw if passed an argument other than a string, null or undefined', function() {
+    expect(() => sankey.nodePopupTemplate({})).to.throw();
+    expect(() => sankey.nodePopupTemplate([])).to.throw();
+    expect(() => sankey.nodePopupTemplate(7)).to.throw(); 
+  });
+
+  it('should default to null', function() {
+    expect(sankey.nodePopupTemplate()).to.equal(null);
+  });
+
+  it('should return the instance if passed null', function() {
+    expect(sankey.nodePopupTemplate(null)).to.equal(sankey);
+  });
+
+  it('should return the instance if passed a string', function() {
+    expect(sankey.nodePopupTemplate('Boo!')).to.equal(sankey);
+  });
+});
+
+
+describe('sankey.linkPopupTemplate', function() {
+  it('should throw if passed an argument other than a string, null or undefined', function() {
+    expect(() => sankey.linkPopupTemplate({})).to.throw();
+    expect(() => sankey.linkPopupTemplate([])).to.throw();
+    expect(() => sankey.linkPopupTemplate(7)).to.throw(); 
+  });
+
+  it('should default to null', function() {
+    expect(sankey.linkPopupTemplate()).to.equal(null);
+  });
+
+  it('should return the instance if passed null', function() {
+    expect(sankey.linkPopupTemplate(null)).to.equal(sankey);
+  });
+
+  it('should return the instance if passed a string', function() {
+    expect(sankey.linkPopupTemplate('Boo!')).to.equal(sankey);
+  });
+});

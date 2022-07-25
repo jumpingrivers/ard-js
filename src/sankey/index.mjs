@@ -9,6 +9,8 @@ const createSankey = function(initData, initSteps) {
   const instance = {};
   let data, steps;
   let aspect = 1.25;
+  let nodePopupTemplate = null;
+  let linkPopupTemplate = null;
 
   if (data) { validateData(data); }
   if (steps) { validateSteps(steps); }
@@ -61,6 +63,38 @@ const createSankey = function(initData, initSteps) {
   };
 
   addReadOnlyProp('aspect', aspect => (aspect === undefined) ? getAspect() : setAspect(aspect));
+
+  // The node popup template
+  const getNodePopupTemplate = () => nodePopupTemplate;
+
+  const setNodePopupTemplate = function(t) {
+    if (t !== null && typeof t !== 'string') {
+      throw new Error('nodePopupTemplate must be a string or null');
+    }
+    nodePopupTemplate = t;
+    return instance;
+  };
+
+  addReadOnlyProp('nodePopupTemplate', function(nodePopupTemplate) {
+    if (nodePopupTemplate === undefined) { return getNodePopupTemplate(); }
+    return setNodePopupTemplate(nodePopupTemplate);
+  });
+
+  // The link popup template
+  const getLinkPopupTemplate = () => linkPopupTemplate;
+
+  const setLinkPopupTemplate = function(t) {
+    if (t !== null && typeof t !== 'string') {
+      throw new Error('linkPopupTemplate must be a string or null');
+    }
+    linkPopupTemplate = t;
+    return instance;
+  };
+
+  addReadOnlyProp('linkPopupTemplate', function(linkPopupTemplate) {
+    if (linkPopupTemplate === undefined) { return getLinkPopupTemplate(); }
+    return setLinkPopupTemplate(linkPopupTemplate);
+  });
 
   // The rendering function
   const render = function() {

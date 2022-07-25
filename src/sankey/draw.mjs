@@ -179,14 +179,14 @@ const showPopup = function(hoveredElement, totalCount) {
   const popup = getPopup(instance);
   const popupContent = getPopupContent(instance);
 
-  popup.style('display' , 'block')
-    .style('top', `${bbox.top}px`)
-    .style('left', `${bbox.left}px`);
-
   const data = hoveredElement.datum();
   const isLink = data.sourceId !== undefined;
   
   if (isLink) {
+    const templateString = instance.linkPopupTemplate();
+    if (templateString === '') { return; }
+    const template = templateString ? Handlebars.compile(templateString) : linkTemplate;
+
     const count = data.entries.length;
     const sourceCount = data.source.entries.length;
     const targetCount = data.target.entries.length;
@@ -198,16 +198,24 @@ const showPopup = function(hoveredElement, totalCount) {
       percentageOfSourceCount: Math.round((count/sourceCount)*100),
       percentageOfTargetCount: Math.round((count/targetCount)*100),
     };
-    popupContent.html(linkTemplate(props));
+    popupContent.html(template(props));
   }
   else {
+    const templateString = instance.nodePopupTemplate();
+    if (templateString === '') { return; }
+    const template = templateString ? Handlebars.compile(templateString) : nodeTemplate;
+
     const props = {
       name: data.name,
       count: data.entries.length,
       totalCount
     };
-    popupContent.html(nodeTemplate(props));
+    popupContent.html(template(props));
   }
+
+  popup.style('display' , 'block')
+    .style('top', `${bbox.top}px`)
+    .style('left', `${bbox.left}px`);
 };
 
 

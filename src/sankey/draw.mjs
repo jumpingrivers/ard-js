@@ -183,13 +183,13 @@ const drawSankey = function(sankeyData) {
   const nodeGroup = baseLayer.append('g')
     .attr('id', 'base-node-group');
 
-  const textGroup = baseLayer.append('g')
-    .style('pointer-events', 'none')
-    .attr('id', 'base-text-group');
-
   const hoverLayer = svg.append('g')
     .attr('id', 'hover-layer')
     .style('pointer-events', 'none');
+
+  const textGroup = svg.append('g')
+    .style('pointer-events', 'none')
+    .attr('id', 'text-group');
 
   const mouseover = function(_, d) {
     linkGroup.transition().style('opacity', baseLinkOpacityOnHover);

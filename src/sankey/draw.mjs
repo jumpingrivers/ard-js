@@ -32,41 +32,43 @@ const drawLink = function(selection, hover) {
 };
 
 
-const drawHoverLayer = function(hoveredEntity, hoverData, lookup) {
-  const nSteps = hoverData.steps.length;
-  const { id, sourceId, targetId } = hoveredEntity.datum();
-
+const drawHoverLayer = function(hoveredElement, hoverData, lookup) {
+  const { id, sourceId, targetId } = hoveredElement.datum();
+  const { sankeyLinks, sankeyNodes, steps } = hoverData;
+  const nSteps = steps.length;
+  
   const svg = getSvg(this);
   const hoverLayer = svg.select('#hover-layer');
   const hoverNodeGroup = hoverLayer.append('g');
   const hoverLinkGroup = hoverLayer.append('g');
 
-  const offCenterNodes = new Map();
-
+  // Determine which nodes will be off-center
+  const offCenterNodes = {};
   if (sourceId !== undefined) {
-    const ud = hoveredEntity.datum();
-    offCenterNodes.set(sourceId, ud.y0);
-    offCenterNodes.set(targetId, ud.y1);
+    const ud = hoveredElement.datum();
+    offCenterNodes[sourceId] =  ud.y0;
+    offCenterNodes[targetId] =  ud.y1;
   }
   else {
-    hoverData.sankeyLinks.forEach(function(d) {
+    sankeyLinks.forEach(function(d) {
       if ([d.sourceId, d.targetId].includes(id)) {
-        const ud = select(lookup[d.id]).datum();
+        const ud = lookup[d.id];
         const findingSource = d.sourceId !== id;
         const nodeId = findingSource ? d.sourceId : d.targetId;
         const midpoint = findingSource ? ud.y0 : ud.y1;
-        offCenterNodes.set(nodeId, midpoint);
+        offCenterNodes[nodeId] = midpoint;
       }
     });
   }
 
+  // Add the nodes to the DOM
   const hoverNodes = hoverNodeGroup.selectAll('rect')
-    .data(hoverData.sankeyNodes)
+    .data(sankeyNodes)
     .enter()
     .append('rect')
     .each(function(d) {
-      const ud = select(lookup[d.id]).datum();
-      const midpoint = offCenterNodes.has(d.id) ? offCenterNodes.get(d.id) : (ud.y1 + ud.y0) / 2; 
+      const ud = lookup[d.id];
+      const midpoint = offCenterNodes[d.id] !== undefined ? offCenterNodes[d.id] : (ud.y1 + ud.y0) / 2; 
       const oldHeight = ud.y1 - ud.y0;
       const height = oldHeight * (d.entries.length / ud.entries.length);
 
@@ -85,21 +87,25 @@ const drawHoverLayer = function(hoveredEntity, hoverData, lookup) {
       select(this).datum(data);
     });
 
+  // Create object that maps node id to node data
   const hoveredNodeLookup = hoverNodes.data().reduce(function(obj, d) {
     obj[d.id] = d;
     return obj;
   }, {});
 
-  const sourceToLinkAndTarget = hoverData.sankeyLinks.reduce(function(obj, d) {
+  // Create object that links source node to link/target-node pairs
+  const sourceToLinksAndTargets = sankeyLinks.reduce(function(obj, d) {
     if (!obj[d.sourceId]) { obj[d.sourceId] = []; }
-    obj[d.sourceId].push( {link: d, target: hoveredNodeLookup[d.targetId] });
+    obj[d.sourceId].push({ link: d, target: hoveredNodeLookup[d.targetId] });
     return obj;
   }, {});
 
-  Object.values(sourceToLinkAndTarget).forEach(function(arr) {
+  // Sort target nodes from top to bottom to minimise link overlap
+  Object.values(sourceToLinksAndTargets).forEach(function(arr) {
     arr.sort((a, b) => a.target.y0 - b.target.y0);
   });
 
+  // Set y0 and width of link based on source node
   const addLinkStart = function(link, source) {
     const countUsed = source.countOutUsed;
     const singleCountHeight = (source.y1 - source.y0) / source.entries.length;
@@ -112,6 +118,7 @@ const drawHoverLayer = function(hoveredEntity, hoverData, lookup) {
     source.countOutUsed += count;
   };
 
+  // Set y1 of link based on target node
   const addLinkEnd = function(link, target) {
     const countUsed = target.countInUsed;
     const singleCountHeight = (target.y1 - target.y0) / target.entries.length;
@@ -123,23 +130,28 @@ const drawHoverLayer = function(hoveredEntity, hoverData, lookup) {
     target.countInUsed += count;
   };
 
+  // Add the links to the DOM
   const hoverLinks = hoverLinkGroup.selectAll('path')
-    .data(hoverData.sankeyLinks)
+    .data(sankeyLinks)
     .enter()
     .append('path');
 
-  hoverNodes.filter(function(d) {
-    return d.stepNumber < nSteps - 1;
-  })
+  // Use node data to fill in link data
+  hoverNodes
+    .filter(function(d) { // We only want nodes that are a source of one or more links
+      return d.stepNumber < nSteps - 1;
+    })
     .data()
-    .sort((a, b) => a.y0 - b.y0)
+    .sort((a, b) => a.y0 - b.y0) // Sort from top to bottom
     .forEach(function(source) {
-      sourceToLinkAndTarget[source.id].forEach(function({link, target}) {
-        addLinkStart(link, source);
-        addLinkEnd(link, target);
+      const linksAndTargets = sourceToLinksAndTargets[source.id];
+      linksAndTargets.forEach(function({link, target}) {
+        addLinkStart(link, source); // Add link starting position and "width" (height)
+        addLinkEnd(link, target); // Add link ending position
       });
     });
 
+  // Render the nodes and links
   hoverNodes.call(drawNode, true);
   hoverLinks.call(drawLink, true);
 };
@@ -187,9 +199,9 @@ const drawSankey = function(sankeyData) {
     .attr('id', 'hover-layer')
     .style('pointer-events', 'none');
 
-  const textGroup = svg.append('g')
+  const textLayer = svg.append('g')
     .style('pointer-events', 'none')
-    .attr('id', 'text-group');
+    .attr('id', 'text-layer');
 
   const mouseover = function(_, d) {
     linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
@@ -215,7 +227,7 @@ const drawSankey = function(sankeyData) {
     .enter()
     .append('path')
     .call(drawLink)
-    .each(function(d) { lookup[d.id] = this; })
+    .each(function(d) { lookup[d.id] = d; })
     .on('mouseover', mouseover)
     .on('mouseout', mouseout);
 
@@ -224,11 +236,11 @@ const drawSankey = function(sankeyData) {
     .enter()
     .append('rect')
     .call(drawNode)
-    .each(function(d) { lookup[d.id] = this; })
+    .each(function(d) { lookup[d.id] = d; })
     .on('mouseover', mouseover)
     .on('mouseout', mouseout);
 
-  textGroup.selectAll('text')
+  textLayer.selectAll('text')
     .data(sankeyNodes)
     .enter()
     .append('text')

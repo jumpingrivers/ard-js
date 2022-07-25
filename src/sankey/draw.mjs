@@ -1,4 +1,4 @@
-import { select } from 'd3-selection';
+import { create, select } from 'd3-selection';
 import 'd3-transition';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 import { processData } from './process-data.mjs';
@@ -157,23 +157,56 @@ const drawHoverLayer = function(hoveredElement, hoverData, lookup) {
 };
 
 
+const getPopup = function(instance) {
+  return select(instance.viz.shadowRoot).select('#popup');
+};
+
+const getPopupContent = function(instance) {
+  const popup = getPopup(instance);
+  return select(popup.node().shadowRoot).select('#popup-content');
+};
+
+const showPopup = function(hoveredElement) {
+  const instance = this;
+  const bbox = hoveredElement.node().getBoundingClientRect();
+  const popup = getPopup(instance);
+  const popupContent = getPopupContent(instance);
+
+  popup.style('display' , 'block')
+    .style('top', `${bbox.top}px`)
+    .style('left', `${bbox.left}px`);
+
+  const data = hoveredElement.datum();
+  const isLink = data.sourceId !== undefined;
+  
+  let name;
+  if (isLink) { name = `${data.sourceName} => ${data.targetName}`; }
+  else { name = data.name; }
+
+  popupContent.text(`${name}: ${data.value}`);
+};
+
+const hidePopup = function() {
+  const instance = this;
+  getPopup(instance).style('display' , 'none');
+  getPopupContent(instance).text('');
+};
+
+
 const drawSankey = function(sankeyData) {
   const instance = this;
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
   const container = select(instance.viz);
-  const shadow = select(container.node().shadowRoot);
   const textOffset = 5;
   const width = 1000;
   const height = width / instance.aspect();
   const padding = 10;
   const lookup = {};
+  const shadow = container.node().shadowRoot;
 
   const getTextSide = function(d) {
     return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
   };
-
-  // Clear the container of everything;
-  shadow.text('');
 
   sankey()
     .nodeId(d => d.id)
@@ -182,7 +215,10 @@ const drawSankey = function(sankeyData) {
     .extent([[padding, padding], [width - padding, height - padding]])
     ();
 
-  const svg = shadow.append('svg')
+  // Clear the container of everything;
+  shadow.textContent = '';
+
+  const svg = create('svg')
     .attr('viewBox', `0 0 ${width} ${height}`)
     .style('width', '100%');
 
@@ -200,8 +236,8 @@ const drawSankey = function(sankeyData) {
     .style('pointer-events', 'none');
 
   const textLayer = svg.append('g')
-    .style('pointer-events', 'none')
-    .attr('id', 'text-layer');
+    .attr('id', 'text-layer')
+    .style('pointer-events', 'none');
 
   const mouseover = function(_, d) {
     linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
@@ -215,11 +251,13 @@ const drawSankey = function(sankeyData) {
     }
     const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
     drawHoverLayer.call(instance, select(this), hoverData, lookup);
+    showPopup.call(instance, select(this));
   };
 
   const mouseout = function() {
     hoverLayer.text('');
     linkGroup.interrupt().transition().duration(animationDuration).style('opacity', 1);
+    hidePopup.call(instance);
   };
 
   linkGroup.selectAll('path')
@@ -251,6 +289,26 @@ const drawSankey = function(sankeyData) {
     .attr('y', d => (d.y0 + d.y1) / 2)
     .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end')
     .attr('dominant-baseline', 'middle');
+
+  const popup = create('div')
+    .attr('id', 'popup')
+    .style('pointer-events', 'none')
+    .style('position', 'absolute')
+    .style('display', 'none');
+
+  const popupContent = create('div')
+    .append('div')
+    .attr('id', 'popup-content')
+    .style('display', 'block')
+    .style('background-color', 'rgba(255, 255, 255, 0.6)')
+    .style('padding', '5px')
+    .style('border', '1px solid rgb(88, 88, 88)');
+
+  shadow.appendChild(svg.node());
+  shadow.appendChild(popup.node());
+
+  popup.node().attachShadow({mode: 'open'});
+  popup.node().shadowRoot.appendChild(popupContent.node());
 };
 
 

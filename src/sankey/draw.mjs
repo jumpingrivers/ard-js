@@ -327,10 +327,7 @@ const drawSankey = function(sankeyData) {
   const popupContent = create('div')
     .append('div')
     .attr('id', 'popup-content')
-    .style('display', 'block')
-    .style('background-color', 'rgba(255, 255, 255, 0.6)')
-    .style('padding', '5px')
-    .style('border', '1px solid rgb(88, 88, 88)');
+    .attr('class', 'popup-content');
 
   shadow.appendChild(svg.node());
   shadow.appendChild(popup.node());

@@ -8,4 +8,10 @@
   background-color: rgba(255, 255, 255, 0.6);
   padding: 5px;
   border: 1px solid rgb(88, 88, 88);
+  backdrop-filter: blur(2px);
+}
+
+p {
+  width: max-content;
+  max-width: 40vw;
 }

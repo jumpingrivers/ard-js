@@ -3,6 +3,7 @@ import 'd3-transition';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 import Handlebars from 'handlebars';
 import { processData } from './process-data.mjs';
+import vizTemplate from './viz-templates/index.html';
 import nodeTemplateString from './popup-templates/node.html';
 import linkTemplateString from './popup-templates/link.html';
 import popupStyleString from './popup-templates/popup.css';
@@ -175,8 +176,8 @@ const getPopupContent = function(instance) {
 
 const showPopup = function(hoveredElement, totalCount) {
   const instance = this;
-  const bbox = hoveredElement.node().getBoundingClientRect();
   const popup = getPopup(instance);
+  popup.classed('hidden' , false);
   const popupContent = getPopupContent(instance);
 
   const data = hoveredElement.datum();
@@ -212,17 +213,57 @@ const showPopup = function(hoveredElement, totalCount) {
     };
     popupContent.html(template(props));
   }
-
-  popup.style('display' , 'block')
-    .style('top', `${bbox.top}px`)
-    .style('left', `${bbox.left}px`);
 };
 
 
 const hidePopup = function() {
   const instance = this;
-  getPopup(instance).style('display' , 'none');
-  getPopupContent(instance).text('');
+  getPopup(instance).classed('hidden' , true);
+};
+
+
+const positionPopup = function(hoveredElement, coords) {
+  const instance = this;
+  const svg = getSvg(instance);
+  const popup = getPopup(instance);
+  const svgBounds = svg.node().getBoundingClientRect();
+  const data = hoveredElement.datum();
+  const px = v => `${v}px`;
+
+  popup
+    .style('top', px(coords.y))
+    .style('left', px(coords.x));
+
+  const top = 'translateY(-100%) translateY(-5px)';
+  const right = 'translateX(20px)';
+  const bottom = 'translateY(20px)';
+  const left = 'translateX(-100%) translateX(-5px)';
+
+  const topRight = `${right} ${top}`;
+  const bottomRight = `${right} ${bottom}`;
+  const bottomLeft = `${left} ${bottom}`;
+  const topLeft = `${left} ${top}`;  
+
+  let order = [bottomRight, topLeft, topRight, bottomLeft];
+  if (data.sourceId !== undefined) {
+    if (data.y1 > data.y0) {
+      order = [bottomLeft, topRight, topLeft, bottomRight];
+    }
+  }
+
+  const isContained = function({top, right, bottom, left}) {
+    if (top < svgBounds.top) { return false; }
+    if (right > svgBounds.right) { return false; }
+    if (bottom > svgBounds.bottom) { return false; }
+    if (left < svgBounds.left) { return false; }
+    return true;
+  };
+
+  for(const transform of order) {
+    popup.style('transform', transform);
+    const bounds = popup.node().getBoundingClientRect();
+    if (isContained(bounds)) { break; }
+  }
 };
 
 
@@ -235,7 +276,7 @@ const drawSankey = function(sankeyData) {
   const height = width / instance.aspect();
   const padding = 10;
   const lookup = {};
-  const shadow = container.node().shadowRoot;
+  const shadow = select(container.node().shadowRoot);
 
   const getTextSide = function(d) {
     return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
@@ -248,12 +289,10 @@ const drawSankey = function(sankeyData) {
     .extent([[padding, padding], [width - padding, height - padding]])
     ();
 
-  // Clear the container of everything;
-  shadow.textContent = '';
+  shadow.html(vizTemplate);
 
-  const svg = create('svg')
-    .attr('viewBox', `0 0 ${width} ${height}`)
-    .style('width', '100%');
+  const svg = shadow.select('#graphic')
+    .attr('viewBox', `0 0 ${width} ${height}`);
 
   const baseLayer = svg.append('g')
     .attr('id', 'base-layer');
@@ -293,6 +332,13 @@ const drawSankey = function(sankeyData) {
     hidePopup.call(instance);
   };
 
+  const mousemove = function(evt) {
+    const bbox = instance.viz.getBoundingClientRect();
+    const coords = { x: evt.clientX - bbox.left, y: evt.clientY - bbox.top };
+    console.log({ client: evt.clientY, page: evt.pageY, screen: evt.screenY });
+    positionPopup.call(instance, select(this), coords);
+  };
+
   linkGroup.selectAll('path')
     .data(sankeyLinks)
     .enter()
@@ -300,7 +346,8 @@ const drawSankey = function(sankeyData) {
     .call(drawLink)
     .each(function(d) { lookup[d.id] = d; })
     .on('mouseover', mouseover)
-    .on('mouseout', mouseout);
+    .on('mouseout', mouseout)
+    .on('mousemove', mousemove);
 
   nodeGroup.selectAll('rect')
     .data(sankeyNodes)
@@ -309,7 +356,8 @@ const drawSankey = function(sankeyData) {
     .call(drawNode)
     .each(function(d) { lookup[d.id] = d; })
     .on('mouseover', mouseover)
-    .on('mouseout', mouseout);
+    .on('mouseout', mouseout)
+    .on('mousemove', mousemove);
 
   textLayer.selectAll('text')
     .data(sankeyNodes)
@@ -323,11 +371,7 @@ const drawSankey = function(sankeyData) {
     .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end')
     .attr('dominant-baseline', 'middle');
 
-  const popup = create('div')
-    .attr('id', 'popup')
-    .style('pointer-events', 'none')
-    .style('position', 'absolute')
-    .style('display', 'none');
+  const popup = shadow.select('#popup');
 
   const popupStyles = create('style')
     .text(popupStyleString);
@@ -336,9 +380,6 @@ const drawSankey = function(sankeyData) {
     .append('div')
     .attr('id', 'popup-content')
     .attr('class', 'popup-content');
-
-  shadow.appendChild(svg.node());
-  shadow.appendChild(popup.node());
 
   popup.node().attachShadow({mode: 'open'});
   popup.node().shadowRoot.appendChild(popupStyles.node());

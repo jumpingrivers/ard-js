@@ -19,7 +19,8 @@ const createSankey = function(initData, initSteps) {
 
   // The viz container
   const container = create('div')
-    .style('width', '100%');
+    .style('width', '100%')
+    .style('position', 'relative');
 
   select(container.node().attachShadow({mode: 'open'}));
 

@@ -39,8 +39,25 @@ const drawLink = function(selection, hover) {
 };
 
 
-const drawHoverLayer = function(hoveredElement, hoverData, lookup) {
-  const { id, sourceId, targetId } = hoveredElement.datum();
+const drawText = function(selection, nSteps) {
+  const textOffset = 5;
+
+  const getTextSide = function(d) {
+    return (d.stepNumber >= nSteps / 2) ? 'left' : 'right';
+  };
+
+  selection.text(d => d.name)
+    .attr('x', function(d) { 
+      return getTextSide(d) === 'right' ? d.x1 + textOffset : d.x0 - textOffset;
+    })
+    .attr('y', d => (d.y0 + d.y1) / 2)
+    .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end')
+    .attr('dominant-baseline', 'middle');
+};
+
+
+const drawHoverLayer = function(hoveredSelection, hoverData, lookup) {
+  const { id, sourceId, targetId } = hoveredSelection.datum();
   const { sankeyLinks, sankeyNodes, steps } = hoverData;
   const nSteps = steps.length;
   
@@ -52,7 +69,7 @@ const drawHoverLayer = function(hoveredElement, hoverData, lookup) {
   // Determine which nodes will be off-center
   const offCenterNodes = {};
   if (sourceId !== undefined) {
-    const ud = hoveredElement.datum();
+    const ud = hoveredSelection.datum();
     offCenterNodes[sourceId] =  ud.y0;
     offCenterNodes[targetId] =  ud.y1;
   }
@@ -174,13 +191,13 @@ const getPopupContent = function(instance) {
 };
 
 
-const showPopup = function(hoveredElement, totalCount) {
+const showPopup = function(hoveredSelection, totalCount) {
   const instance = this;
   const popup = getPopup(instance);
   popup.classed('hidden' , false);
   const popupContent = getPopupContent(instance);
 
-  const data = hoveredElement.datum();
+  const data = hoveredSelection.datum();
   const isLink = data.sourceId !== undefined;
   
   if (isLink) {
@@ -222,12 +239,12 @@ const hidePopup = function() {
 };
 
 
-const positionPopup = function(hoveredElement, coords) {
+const positionPopup = function(hoveredSelection, coords) {
   const instance = this;
   const svg = getSvg(instance);
   const popup = getPopup(instance);
   const svgBounds = svg.node().getBoundingClientRect();
-  const data = hoveredElement.datum();
+  const data = hoveredSelection.datum();
   const px = v => `${v}px`;
 
   popup
@@ -267,20 +284,8 @@ const positionPopup = function(hoveredElement, coords) {
 };
 
 
-const drawSankey = function(sankeyData) {
-  const instance = this;
-  const { sankeyNodes, sankeyLinks, steps } = sankeyData;
-  const container = select(instance.viz);
-  const textOffset = 5;
-  const width = 1000;
-  const height = width / instance.aspect();
+const addSankeyCoordinates = function({sankeyNodes, sankeyLinks}, {width, height}) {
   const padding = 10;
-  const lookup = {};
-  const shadow = select(container.node().shadowRoot);
-
-  const getTextSide = function(d) {
-    return (d.stepNumber >= steps.length / 2) ? 'left' : 'right';
-  };
 
   sankey()
     .nodeId(d => d.id)
@@ -288,11 +293,24 @@ const drawSankey = function(sankeyData) {
     .links(sankeyLinks)
     .extent([[padding, padding], [width - padding, height - padding]])
     ();
+};
+
+
+const drawSankey = function(sankeyData) {
+  const instance = this;
+  const { sankeyNodes, sankeyLinks, steps } = sankeyData;
+  const container = select(instance.viz);
+  const width = 1000;
+  const height = width / instance.aspect();
+  const shadow = select(container.node().shadowRoot);
+
+  addSankeyCoordinates(sankeyData, {width, height});
 
   shadow.html(vizTemplate);
 
   const svg = shadow.select('#graphic')
-    .attr('viewBox', `0 0 ${width} ${height}`);
+    .attr('viewBox', `0 0 ${width} ${height}`)
+    .datum(sankeyData);
 
   const baseLayer = svg.append('g')
     .attr('id', 'base-layer');
@@ -321,8 +339,9 @@ const drawSankey = function(sankeyData) {
     else {
       filter.push({ key: d.group, value: d.name });
     }
-    const hoverData = processData(sankeyData.data, sankeyData.currentStepNames, filter);
-    drawHoverLayer.call(instance, select(this), hoverData, lookup);
+    const currentData = svg.datum();
+    const hoverData = processData(currentData.data, currentData.currentStepNames, filter);
+    drawHoverLayer.call(instance, select(this), hoverData, currentData.lookup);
     showPopup.call(instance, select(this), sankeyData.data.length);
   };
 
@@ -335,41 +354,100 @@ const drawSankey = function(sankeyData) {
   const mousemove = function(evt) {
     const bbox = instance.viz.getBoundingClientRect();
     const coords = { x: evt.clientX - bbox.left, y: evt.clientY - bbox.top };
-    console.log({ client: evt.clientY, page: evt.pageY, screen: evt.screenY });
     positionPopup.call(instance, select(this), coords);
   };
 
+  const click = function() {
+    drillDown.call(instance, select(this));
+  };
+
+  const drillDown = function(hoveredSelection) {  
+    const currentData = svg.datum();
+    const {group, name} = hoveredSelection.datum();
+    const filters = currentData.filters.slice();
+    filters.push({ key: group, value: name });
+    const newData = processData(currentData.data, currentData.steps, filters);
+    svg.datum(newData);
+    const nSteps = newData.steps.length;
+  
+    const [,, width, height] = svg.attr('viewBox').split(/\s+/);
+    addSankeyCoordinates(newData, {width, height});
+  
+    // Links
+    const linkUpdate = svg.select('#base-link-group')
+      .selectAll('path')
+      .data(newData.sankeyLinks, d => d.id);
+  
+    linkUpdate.enter()
+      .append('path')
+      .call(drawLink)
+      .on('mouseover', mouseover)
+      .on('mouseout', mouseout)
+      .on('mousemove', mousemove);
+  
+    linkUpdate
+      .call(drawLink);
+  
+    linkUpdate.exit().remove();
+  
+    // Nodes
+    const nodeUpdate = svg.select('#base-node-group')
+      .selectAll('rect')
+      .data(newData.sankeyNodes, d => d.id);
+  
+    nodeUpdate.enter()
+      .append('rect')
+      .call(drawNode)
+      .on('mouseover', mouseover)
+      .on('mouseout', mouseout)
+      .on('mousemove', mousemove)
+      .on('click', click);
+  
+    nodeUpdate
+      .call(drawNode);
+  
+    nodeUpdate.exit().remove();
+  
+    // Text
+    const textUpdate = svg.select('#text-layer')
+      .selectAll('text')
+      .data(newData.sankeyNodes, d => d.id);
+  
+    textUpdate.enter()
+      .append('text')
+      .call(drawText, nSteps);
+  
+    textUpdate
+      .call(drawText, nSteps);
+  
+    textUpdate.exit().remove();
+  };
+
   linkGroup.selectAll('path')
-    .data(sankeyLinks)
+    .data(sankeyLinks, d => d.id)
     .enter()
     .append('path')
     .call(drawLink)
-    .each(function(d) { lookup[d.id] = d; })
     .on('mouseover', mouseover)
     .on('mouseout', mouseout)
     .on('mousemove', mousemove);
 
   nodeGroup.selectAll('rect')
-    .data(sankeyNodes)
+    .data(sankeyNodes, d => d.id)
     .enter()
     .append('rect')
     .call(drawNode)
-    .each(function(d) { lookup[d.id] = d; })
     .on('mouseover', mouseover)
     .on('mouseout', mouseout)
-    .on('mousemove', mousemove);
+    .on('mousemove', mousemove)
+    .on('click', click);
 
   textLayer.selectAll('text')
-    .data(sankeyNodes)
+    .data(sankeyNodes, d => d.id)
     .enter()
     .append('text')
     .text(d => d.name)
-    .attr('x', function(d) { 
-      return getTextSide(d) === 'right' ? d.x1 + textOffset : d.x0 - textOffset;
-    })
-    .attr('y', d => (d.y0 + d.y1) / 2)
-    .attr('text-anchor', d => getTextSide(d) === 'right' ? 'start' : 'end')
-    .attr('dominant-baseline', 'middle');
+    .call(drawText, steps.length);
 
   const popup = shadow.select('#popup');
 

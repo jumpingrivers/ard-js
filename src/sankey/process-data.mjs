@@ -80,7 +80,12 @@ const processData = function(inputData, inputSteps, filters = []) {
   })
     .flat();
 
-  return({ data, steps, sankeyNodes, sankeyLinks, currentStepNames });
+  const lookup = {};
+
+  sankeyNodes.forEach(d => lookup[d.id] = d);
+  sankeyLinks.forEach(d => lookup[d.id] = d);
+
+  return({ data, steps, sankeyNodes, sankeyLinks, currentStepNames, filters, lookup });
 };
 
 

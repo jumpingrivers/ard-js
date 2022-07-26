@@ -44,10 +44,12 @@ const createObjectifySankeyLinkFunction = function(sourceGroup, targetGroup) {
 };
 
 
-const processData = function(inputData, inputSteps, filters = []) {
+const processData = function(inputData, inputSteps, inputFilters = []) {
   const steps = inputSteps.map(function(d) {
     return Array.isArray(d) ? d.slice() : [d];
   });
+
+  const filters = inputFilters.slice();
 
   const filterFunction = constructFilterFunction(filters);
   const filterKeySet = new Set(filters.map(d => d.key));

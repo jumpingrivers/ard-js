@@ -357,17 +357,40 @@ const drawSankey = function(sankeyData) {
     positionPopup.call(instance, select(this), coords);
   };
 
-  const click = function() {
-    drillDown.call(instance, select(this));
+  const click = function(evt) {
+    drill.call(instance, select(this), evt.shiftKey);
   };
 
-  const drillDown = function(hoveredSelection) {  
-    const currentData = svg.datum();
+  const drill = function(hoveredSelection, up) {
     const {group, name} = hoveredSelection.datum();
-    const filters = currentData.filters.slice();
-    filters.push({ key: group, value: name });
-    const newData = processData(currentData.data, currentData.steps, filters);
+    const currentFilters = svg.datum().filters;
+    const filters = currentFilters.slice();
+
+    // If going back up then we need to remove the right filter
+    if (up) {
+      const nodeData = hoveredSelection.datum();
+      const stepsArray = sankeyData.steps[nodeData.stepNumber];
+      // We only use the index of the group if we have drilled all the way to the bottom
+      let index = stepsArray.indexOf(group);
+      // Normally we remove the filter from the step above
+      if (index < stepsArray.length - 1) { index--; }
+      const key = stepsArray[index];
+      const filterOutIndex = filters.findIndex(d => d.key === key);
+      filters.splice(filterOutIndex, 1);
+    }
+    // If we are drilling down we need to add a filter
+    else {
+      if (!filters.find(d => d.key === group)) {
+        filters.push({ key: group, value: name });
+      }
+    }
+
+    // If no filter has been added or removed then don't bother continuing
+    if (filters.length === currentFilters.length) { return; }
+    
+    const newData = processData(sankeyData.data, sankeyData.steps, filters);
     svg.datum(newData);
+
     const nSteps = newData.steps.length;
   
     const [,, width, height] = svg.attr('viewBox').split(/\s+/);

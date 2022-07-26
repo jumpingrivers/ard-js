@@ -21,7 +21,9 @@ const getSvg = function(instance) {
 
 
 const drawNode = function(selection, hover) {
-  selection.attr('x', d => d.x0)
+  selection
+    .attr('class', 'node')
+    .attr('x', d => d.x0)
     .attr('y', d => d.y0)
     .attr('width', d => d.x1 - d.x0)
     .attr('height', d => d.y1 - d.y0)
@@ -31,7 +33,9 @@ const drawNode = function(selection, hover) {
 
 
 const drawLink = function(selection, hover) {
-  selection.attr('d', sankeyLinkHorizontal())
+  selection
+    .attr('class', 'link')
+    .attr('d', sankeyLinkHorizontal())
     .attr('stroke-width', d => d.width)
     .style('stroke', hover ? 'red' : '#add8e6')
     .style('stroke-opacity', linkOpacity)
@@ -358,7 +362,13 @@ const drawSankey = function(sankeyData) {
   };
 
   const click = function(evt) {
-    drill.call(instance, select(this), evt.shiftKey);
+    const drilled = drill.call(instance, select(this), evt.shiftKey);
+    if (!drilled) { return; }
+    const x = evt.clientX;
+    const y = evt.clientY;
+    const newSelection = select(shadow.node().elementFromPoint(x, y));
+    if (!newSelection.classed('node')) { return; }
+    newSelection.dispatch('mouseover').dispatch('mousemove');
   };
 
   const drill = function(hoveredSelection, up) {
@@ -386,14 +396,13 @@ const drawSankey = function(sankeyData) {
     }
 
     // If no filter has been added or removed then don't bother continuing
-    if (filters.length === currentFilters.length) { return; }
+    if (filters.length === currentFilters.length) { return false; }
     
     const newData = processData(sankeyData.data, sankeyData.steps, filters);
     svg.datum(newData);
 
     const nSteps = newData.steps.length;
   
-    const [,, width, height] = svg.attr('viewBox').split(/\s+/);
     addSankeyCoordinates(newData, {width, height});
   
     // Links
@@ -444,6 +453,10 @@ const drawSankey = function(sankeyData) {
       .call(drawText, nSteps);
   
     textUpdate.exit().remove();
+
+    hoveredSelection.dispatch('mouseout');
+
+    return true;
   };
 
   linkGroup.selectAll('path')

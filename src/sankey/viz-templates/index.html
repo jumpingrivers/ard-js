@@ -5,6 +5,24 @@
     user-select: none;
   }
 
+  [id="dropdowns"] {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 5%;
+  }
+
+  [id="dropdowns"] > div {
+    flex: 1 1 100%;
+    border: 1px solid #d8d8d8;
+  }
+
+  [id="dropdowns"] select {
+    width: 100%;
+    min-height: 28px;
+    border: none;
+  }
+
   [id="graphic"] {
     display: block;
     width: 100%;
@@ -21,6 +39,7 @@
 </style>
 
 <div id="wrapper">
+  <div id="dropdowns"></div>
   <svg id="graphic"></svg>
   <div id="popup" class="hidden"></div>
 </div>

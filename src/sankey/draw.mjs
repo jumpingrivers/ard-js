@@ -7,16 +7,20 @@ import vizTemplate from './viz-templates/index.html';
 import nodeTemplateString from './popup-templates/node.html';
 import linkTemplateString from './popup-templates/link.html';
 import popupStyleString from './popup-templates/popup.css';
+import { ascending } from 'd3-array';
 
 const linkOpacity = 0.25;
 const baseLinkOpacityOnHover = 0.5;
+const baseWidth = 1000;
+const padding = 10;
+const bottomPadding = 3 * padding;
 const animationDuration = 1000;
 
 const nodeTemplate = Handlebars.compile(nodeTemplateString);
 const linkTemplate = Handlebars.compile(linkTemplateString);
 
 const getSvg = function(instance) {
-  return select(instance.viz.shadowRoot).select('svg');
+  return select(instance.viz.shadowRoot).select('#graphic');
 };
 
 
@@ -288,14 +292,58 @@ const positionPopup = function(hoveredSelection, coords) {
 };
 
 
-const addSankeyCoordinates = function({sankeyNodes, sankeyLinks}, {width, height}) {
-  const padding = 10;
+const updateDropdown = function(dropdown, instance) {
+  const currentData = getSvg(instance).datum();
+  const { filters } = currentData;
+  const { levels, stepNumber } = dropdown.datum();
 
+  const options = [{ name: 'All' }];
+  let counter = 0;
+  for (const s of levels) {
+    const filter = filters.find(f => f.key === s);
+    if (filter === undefined) { break; }
+    options.push({ name: filter.value, group: filter.key});
+    counter++;
+  }
+
+  const selectedIndex = counter;
+
+  if (counter <= levels.length - 1) {
+    const drillOptions = currentData.sankeyNodes
+      .filter(d => d.stepNumber === stepNumber)
+      .sort((a, b) => ascending(a.y0, b.y0));
+
+    options.push(...drillOptions);
+  }
+
+  dropdown
+    .text('')
+    .attr('data-selected-index', selectedIndex)
+    .selectAll('option')
+    .data(options)
+    .enter()
+    .append('option')
+    .attr('value', (_, i) => i)
+    .attr('selected', (_, i) => i === selectedIndex ? 'selected' : null)
+    .text(function(d, i) {
+      let prefix = '';
+      const diff = i - counter;
+      prefix = diff <= 0 ? '↑'.repeat(Math.abs(diff)) : '↓';
+      if (i) {
+        prefix += ` ${d.group} =`;
+      }
+      return `${prefix} ${d.name}`;
+    })
+    .filter((_, i) => i === 'selected');
+};
+
+
+const addSankeyCoordinates = function({sankeyNodes, sankeyLinks}, {width, height}) {
   sankey()
     .nodeId(d => d.id)
     .nodes(sankeyNodes)
     .links(sankeyLinks)
-    .extent([[padding, padding], [width - padding, height - padding]])
+    .extent([[padding, padding], [width - padding, height - bottomPadding]])
     ();
 };
 
@@ -304,7 +352,7 @@ const drawSankey = function(sankeyData) {
   const instance = this;
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
   const container = select(instance.viz);
-  const width = 1000;
+  const width = baseWidth;
   const height = width / instance.aspect();
   const shadow = select(container.node().shadowRoot);
 
@@ -331,6 +379,10 @@ const drawSankey = function(sankeyData) {
 
   const textLayer = svg.append('g')
     .attr('id', 'text-layer')
+    .style('pointer-events', 'none');
+
+  const labelLayer = svg.append('g')
+    .attr('id', 'label-layer')
     .style('pointer-events', 'none');
 
   const mouseover = function(_, d) {
@@ -361,9 +413,11 @@ const drawSankey = function(sankeyData) {
     positionPopup.call(instance, select(this), coords);
   };
 
-  const click = function(evt) {
-    const drilled = drill.call(instance, select(this), evt.shiftKey);
+  const click = function(evt, d) {
+    const drillFunc = evt.shiftKey ? drillUp : drillDown;
+    const drilled =  drillFunc(evt.shiftKey ? d.stepNumber : d);
     if (!drilled) { return; }
+    select(this).dispatch('mouseout');
     const x = evt.clientX;
     const y = evt.clientY;
     const newSelection = select(shadow.node().elementFromPoint(x, y));
@@ -371,33 +425,27 @@ const drawSankey = function(sankeyData) {
     newSelection.dispatch('mouseover').dispatch('mousemove');
   };
 
-  const drill = function(hoveredSelection, up) {
-    const {group, name} = hoveredSelection.datum();
+  const drillDown = function(nodeData) {
+    const { group, name, stepNumber } = nodeData;
+    const filters = svg.datum().filters.slice();
+    filters.push({ key: group, value: name, stepNumber });
+    return drill(filters, stepNumber);
+  };
+
+  const drillUp = function(stepNumber, nSteps = 1) {
+    const filters = svg.datum().filters.slice();
+    for (let i = 0; i < nSteps; i++) {
+      const index = filters.findLastIndex(d => d.stepNumber === stepNumber);
+      if (index !== -1) { filters.splice(index, 1); }
+      else { break; }
+    }
+    return drill(filters, stepNumber);
+  };
+
+  const drill = function(filters, stepNumber) {
     const currentFilters = svg.datum().filters;
-    const filters = currentFilters.slice();
+    if (filters.length === currentFilters.length) { return; }
 
-    // If going back up then we need to remove the right filter
-    if (up) {
-      const nodeData = hoveredSelection.datum();
-      const stepsArray = sankeyData.steps[nodeData.stepNumber];
-      // We only use the index of the group if we have drilled all the way to the bottom
-      let index = stepsArray.indexOf(group);
-      // Normally we remove the filter from the step above
-      if (index < stepsArray.length - 1) { index--; }
-      const key = stepsArray[index];
-      const filterOutIndex = filters.findIndex(d => d.key === key);
-      filters.splice(filterOutIndex, 1);
-    }
-    // If we are drilling down we need to add a filter
-    else {
-      if (!filters.find(d => d.key === group)) {
-        filters.push({ key: group, value: name });
-      }
-    }
-
-    // If no filter has been added or removed then don't bother continuing
-    if (filters.length === currentFilters.length) { return false; }
-    
     const newData = processData(sankeyData.data, sankeyData.steps, filters);
     svg.datum(newData);
 
@@ -454,7 +502,16 @@ const drawSankey = function(sankeyData) {
   
     textUpdate.exit().remove();
 
-    hoveredSelection.dispatch('mouseout');
+    // Step labels
+    svg.select('#label-layer')
+      .selectAll('text')
+      .data(newData.currentStepNames)
+      .text(d => d);
+    
+    // Dropdown labels
+    dropdowns.selectAll('select')
+      .filter(d => d.stepNumber === stepNumber)
+      .call(updateDropdown, instance);
 
     return true;
   };
@@ -498,6 +555,53 @@ const drawSankey = function(sankeyData) {
   popup.node().attachShadow({mode: 'open'});
   popup.node().shadowRoot.appendChild(popupStyles.node());
   popup.node().shadowRoot.appendChild(popupContent.node());
+
+  const dropdowns = shadow.select('#dropdowns');
+
+  dropdowns
+    .selectAll('div')
+    .data(steps.map((d, i) => ({levels: d, stepNumber: i})))
+    .enter()
+    .append('div')
+    .each(function({ stepNumber }) {
+      const dropdown = select(this).append('select');
+
+      dropdown
+        .call(updateDropdown, instance)
+        .on('change', function() {
+          const oldIndex = parseInt(dropdown.node().dataset.selectedIndex);
+          const newIndex = dropdown.property('value');
+          if (newIndex > oldIndex) {
+            const data = dropdown.selectAll('option').data()[newIndex];
+            drillDown(data);
+          }
+          else { drillUp(stepNumber, oldIndex - newIndex); }
+        });
+    });
+
+  labelLayer
+    .selectAll('text')
+    .data(sankeyData.currentStepNames)
+    .enter()
+    .append('text')
+    .text(d => d)
+    .attr('x', function(_, i) {
+      const { x0, x1 } = sankeyNodes.find(d => d.stepNumber === i);
+      if (i === 0) { return x0; }
+      else if (i === steps.length - 1) { return x1; }
+      else { return (x0 + x1) / 2; }
+    }) 
+    .attr('y', function() {
+      const offset = 8;
+      return height - (bottomPadding - offset);
+    })
+    .attr('text-anchor', function(_, i) {
+      if (i === 0) { return 'start'; }
+      else if (i === steps.length -1) { return 'end'; }
+      else { return 'middle'; }
+    })
+    .attr('dominant-baseline', 'hanging')
+    .style('font-weight', 'bold');
 };
 
 

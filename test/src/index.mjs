@@ -208,3 +208,31 @@ describe('sankey.linkPopupTemplate', function() {
     expect(sankey.linkPopupTemplate('Boo!')).to.equal(sankey);
   });
 });
+
+
+describe('sankey.altClickHandler', function() {
+  it('should throw if passed an argument other than a function, null or undefined', function() {
+    expect(() => sankey.altClickHandler({})).to.throw();
+    expect(() => sankey.altClickHandler([])).to.throw();
+    expect(() => sankey.altClickHandler(7)).to.throw();
+    expect(() => sankey.altClickHandler('function')).to.throw(); 
+  });
+
+  it('should default to null', function() {
+    expect(sankey.altClickHandler()).to.equal(null);
+  });
+
+  it('should return the instance if passed null', function() {
+    expect(sankey.altClickHandler(null)).to.equal(sankey);
+  });
+
+  it('should return the instance if passed a function', function() {
+    const func = function() {};
+    expect(sankey.altClickHandler(func)).to.equal(sankey);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    const func = function() {};
+    expect(sankey.altClickHandler((func)).altClickHandler()).to.equal(func);
+  });
+});

@@ -388,6 +388,9 @@ const drawSankey = function(sankeyData) {
     .style('pointer-events', 'none');
 
   const mouseover = function(_, d) {
+    // The next call is useful when resizing elements
+    // It seems like sometimes resizing leads to mouseover calls without mouseout ones???
+    mouseout();
     linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
     const filter = [];
     if (d.sourceId) {
@@ -419,7 +422,8 @@ const drawSankey = function(sankeyData) {
     const drillFunc = evt.shiftKey ? drillUp : drillDown;
     const drilled =  drillFunc(evt.shiftKey ? d.stepNumber : d);
     if (!drilled) { return; }
-    select(this).dispatch('mouseout');
+    // This retiggering below seems to be needed to redraw the overlay properly
+    // when a single node is expanded to fill the whole level
     const x = evt.clientX;
     const y = evt.clientY;
     const newSelection = select(shadow.node().elementFromPoint(x, y));
@@ -429,7 +433,11 @@ const drawSankey = function(sankeyData) {
 
   const drillDown = function(nodeData) {
     const filters = svg.datum().filters.slice();
-    filters.push(nodeData);
+    const { name, group, stepNumber } = nodeData;
+    const filterObject = filters.find(function(d) {
+      return d.name === name && d.group === group && d.stepNumber === stepNumber; 
+    });
+    if (filterObject === undefined) { filters.push(nodeData); }
     return drill(filters, nodeData.stepNumber);
   };
 
@@ -444,50 +452,128 @@ const drawSankey = function(sankeyData) {
   };
 
   const drill = function(filters, stepNumber) {
-    const currentFilters = svg.datum().filters;
-    if (filters.length === currentFilters.length) { return; }
+    const oldFilters = svg.datum().filters;
+
+    const nOld = oldFilters.length;
+    const nNew = filters.length;
+    if (nOld === nNew) { return; }
 
     const newData = processData(sankeyData.data, sankeyData.steps, filters);
     svg.datum(newData);
 
-    const nSteps = newData.steps.length;
-  
+    const nSteps = newData.steps.length;  
     addSankeyCoordinates(newData, {width, height});
   
     // Links
     const linkUpdate = svg.select('#base-link-group')
       .selectAll('path')
       .data(newData.sankeyLinks, d => d.id);
+
+    const linkAnimationDuration = animationDuration / 4;
   
     linkUpdate.enter()
       .append('path')
       .call(drawLink)
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
-      .on('mousemove', mousemove);
+      .on('mousemove', mousemove)
+      .style('stroke-opacity', 0)
+      .transition()
+      .delay(animationDuration)
+      .duration(linkAnimationDuration)
+      .style('stroke-opacity', linkOpacity);
   
     linkUpdate
-      .call(drawLink);
+      .transition()
+      .duration(linkAnimationDuration)
+      .style('opacity', 0)
+      .on('end', function() {
+        select(this)
+          .call(drawLink)
+          .transition()
+          .delay(animationDuration - linkAnimationDuration)
+          .duration(animationDuration / 4)
+          .style('opacity', 1);
+      });
   
-    linkUpdate.exit().remove();
+    linkUpdate.exit()
+      .transition()
+      .duration(linkAnimationDuration)
+      .style('stroke-opacity', 0)
+      .remove();
   
     // Nodes
     const nodeUpdate = svg.select('#base-node-group')
       .selectAll('rect')
       .data(newData.sankeyNodes, d => d.id);
+
+    let countUsed = 0;
+    const isDrillDown = nNew > nOld;
+    const oldData = isDrillDown ? filters[nNew - 1] : oldFilters[nOld - 1];
+    const top = oldData.y0;
+    const singleCountHeight = (oldData.y1 - oldData.y0) / oldData.entries.length;
+
+    const getYAttributes = function(data) {
+      const count = data.entries.length;
+      const y = top + countUsed * singleCountHeight;
+      const height = count * singleCountHeight;
+      countUsed += count;
+      return { y, height };
+    };
   
-    nodeUpdate.enter()
+    hoverLayer.classed('hidden', true);
+
+    const nodeEnter = nodeUpdate.enter()
       .append('rect')
-      .call(drawNode)
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
       .on('mousemove', mousemove)
       .on('click', click);
+
+    if (isDrillDown) {
+      nodeEnter
+        .sort((a, b) => ascending(a.y0, b.y0))
+        .call(drawNode)
+        .each(function(d) {
+          const { y, height } = getYAttributes(d);
+          select(this).attr('y', y).attr('height', height);
+        })
+        .transition()
+        .duration(animationDuration)
+        .call(drawNode);
+
+      nodeUpdate.exit()
+        .remove();
+    }
+    else {
+      nodeEnter
+        .transition()
+        .delay(animationDuration)
+        .duration(0)
+        .call(drawNode);
+
+      nodeUpdate.exit()
+        .sort((a, b) => ascending(a.y0, b.y0))
+        .each(function(d) {
+          const { y, height } = getYAttributes(d);
+
+          select(this)
+            .transition()
+            .duration(animationDuration)
+            .attr('y', y)
+            .attr('height', height)
+            .remove();    
+        });
+    }
   
     nodeUpdate
-      .call(drawNode);
-  
-    nodeUpdate.exit().remove();
+      .transition()
+      .duration(animationDuration)
+      .call(drawNode)
+      .end()
+      .then(function() {
+        hoverLayer.classed('hidden', false);
+      });
   
     // Text
     const textUpdate = svg.select('#text-layer')
@@ -496,12 +582,18 @@ const drawSankey = function(sankeyData) {
   
     textUpdate.enter()
       .append('text')
+      .transition()
+      .delay(animationDuration)
+      .duration(0)
       .call(drawText, nSteps);
   
     textUpdate
+      .transition()
+      .duration(animationDuration)
       .call(drawText, nSteps);
   
-    textUpdate.exit().remove();
+    textUpdate.exit()
+      .remove();
 
     // Step labels
     svg.select('#label-layer')

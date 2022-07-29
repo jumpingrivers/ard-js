@@ -8,7 +8,7 @@ import { drawSankey } from './draw.mjs';
 const createSankey = function(initData, initSteps) {
   const instance = {};
   let data, steps;
-  let aspect = 1.25;
+  let aspect = 1.5;
   let nodePopupTemplate = null;
   let linkPopupTemplate = null;
 

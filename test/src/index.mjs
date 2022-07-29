@@ -163,7 +163,7 @@ describe('sankey.aspect', function() {
   });
 
   it('should default to 1.25', function() {
-    expect(sankey.aspect()).to.equal(1.25);
+    expect(sankey.aspect()).to.equal(1.5);
   });
 });
 

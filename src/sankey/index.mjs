@@ -11,6 +11,7 @@ const createSankey = function(initData, initSteps) {
   let aspect = 1.5;
   let nodePopupTemplate = null;
   let linkPopupTemplate = null;
+  let altClickHandler = null;
 
   if (data) { validateData(data); }
   if (steps) { validateSteps(steps); }
@@ -64,6 +65,22 @@ const createSankey = function(initData, initSteps) {
   };
 
   addReadOnlyProp('aspect', aspect => (aspect === undefined) ? getAspect() : setAspect(aspect));
+
+  // The alt+Click handler function
+  const getAltClickHandler = () => altClickHandler;
+
+  const setAltClickHandler = function(f) {
+    if (typeof f !== 'function' && f !== null) {
+      throw new Error('altClickHandler must be a function or null');
+    }
+    altClickHandler = f;
+    return instance;
+  };
+
+  addReadOnlyProp('altClickHandler', function(altClickHandler) {
+    if (altClickHandler === undefined) { return getAltClickHandler(); }
+    return setAltClickHandler(altClickHandler);
+  });
 
   // The node popup template
   const getNodePopupTemplate = () => nodePopupTemplate;

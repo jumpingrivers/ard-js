@@ -419,9 +419,17 @@ const drawSankey = function(sankeyData) {
   };
 
   const click = function(evt, d) {
+    if (evt.altKey) {
+      if (instance.altClickHandler() !== null) {
+        instance.altClickHandler().call(instance, d);
+      }
+      return;
+    }
+
     const drillFunc = evt.shiftKey ? drillUp : drillDown;
     const drilled =  drillFunc(evt.shiftKey ? d.stepNumber : d);
     if (!drilled) { return; }
+
     // This retiggering below seems to be needed to redraw the overlay properly
     // when a single node is expanded to fill the whole level
     const x = evt.clientX;

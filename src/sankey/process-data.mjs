@@ -6,7 +6,7 @@ const separator = ':---:';
 const constructFilterFunction = function(filters) {
   if (!filters.length) { return () => true; }
   return function(d) {
-    return filters.every(({key, value}) => `${d[key]}` === value);
+    return filters.every(({group, name}) => `${d[group]}` === name);
   };
 };
 
@@ -52,12 +52,12 @@ const processData = function(inputData, inputSteps, inputFilters = []) {
   const filters = inputFilters.slice();
 
   const filterFunction = constructFilterFunction(filters);
-  const filterKeySet = new Set(filters.map(d => d.key));
+  const filterGroupSet = new Set(filters.map(d => d.group));
 
   const data = inputData.filter(filterFunction);
 
   const currentStepNames = steps.map(function(step) {
-    return step.find(k => !filterKeySet.has(k)) || step[step.length - 1];
+    return step.find(k => !filterGroupSet.has(k)) || step[step.length - 1];
   });
 
   const sankeyNodeGroups = currentStepNames.map(function(stepName, stepNumber) {

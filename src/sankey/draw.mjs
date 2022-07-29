@@ -300,9 +300,9 @@ const updateDropdown = function(dropdown, instance) {
   const options = [{ name: 'All' }];
   let counter = 0;
   for (const s of levels) {
-    const filter = filters.find(f => f.key === s);
+    const filter = filters.find(f => f.group === s);
     if (filter === undefined) { break; }
-    options.push({ name: filter.value, group: filter.key});
+    options.push(filter);
     counter++;
   }
 
@@ -389,11 +389,11 @@ const drawSankey = function(sankeyData) {
     linkGroup.transition().style('opacity', baseLinkOpacityOnHover);
     const filter = [];
     if (d.sourceId) {
-      filter.push({ key: d.source.group, value: d.source.name });
-      filter.push({ key: d.target.group, value: d.target.name });
+      filter.push(d.source);
+      filter.push(d.target);
     }
     else {
-      filter.push({ key: d.group, value: d.name });
+      filter.push(d);
     }
     const currentData = svg.datum();
     const hoverData = processData(currentData.data, currentData.currentStepNames, filter);
@@ -426,10 +426,9 @@ const drawSankey = function(sankeyData) {
   };
 
   const drillDown = function(nodeData) {
-    const { group, name, stepNumber } = nodeData;
     const filters = svg.datum().filters.slice();
-    filters.push({ key: group, value: name, stepNumber });
-    return drill(filters, stepNumber);
+    filters.push(nodeData);
+    return drill(filters, nodeData.stepNumber);
   };
 
   const drillUp = function(stepNumber, nSteps = 1) {

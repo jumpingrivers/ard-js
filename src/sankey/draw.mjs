@@ -343,7 +343,7 @@ const addSankeyCoordinates = function({sankeyNodes, sankeyLinks}, {width, height
     .nodeId(d => d.id)
     .nodes(sankeyNodes)
     .links(sankeyLinks)
-    .extent([[padding, padding], [width - padding, height - bottomPadding]])
+    .extent([[padding, padding], [padding + width, padding + height]])
     ();
 };
 
@@ -352,8 +352,10 @@ const drawSankey = function(sankeyData) {
   const instance = this;
   const { sankeyNodes, sankeyLinks, steps } = sankeyData;
   const container = select(instance.viz);
-  const width = baseWidth;
-  const height = width / instance.aspect();
+  const widthWithPadding = baseWidth + 2 * padding;
+  const heightWithPadding = widthWithPadding / instance.aspect();
+  const width = widthWithPadding - 2 * padding;
+  const height = heightWithPadding - (padding + bottomPadding);
   const shadow = select(container.node().shadowRoot);
 
   addSankeyCoordinates(sankeyData, {width, height});
@@ -361,7 +363,7 @@ const drawSankey = function(sankeyData) {
   shadow.html(vizTemplate);
 
   const svg = shadow.select('#graphic')
-    .attr('viewBox', `0 0 ${width} ${height}`)
+    .attr('viewBox', `0 0 ${widthWithPadding} ${heightWithPadding}`)
     .datum(sankeyData);
 
   const baseLayer = svg.append('g')
@@ -592,7 +594,7 @@ const drawSankey = function(sankeyData) {
     }) 
     .attr('y', function() {
       const offset = 8;
-      return height - (bottomPadding - offset);
+      return padding + height + offset;
     })
     .attr('text-anchor', function(_, i) {
       if (i === 0) { return 'start'; }

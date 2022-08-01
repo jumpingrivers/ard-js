@@ -33,6 +33,20 @@
     pointer-events: none;
   }
 
+  [id="reset"] {
+    margin-top: 10px;
+  }
+
+  [id="reset"] button {
+    display: block;
+    float: right;
+    cursor: pointer;
+  }
+
+  [id="reset"] button[disabled] {
+    cursor: not-allowed;
+  }
+
   .hidden {
     display: none;
   }
@@ -42,4 +56,5 @@
   <div id="dropdowns"></div>
   <svg id="graphic"></svg>
   <div id="popup" class="hidden"></div>
+  <div id="reset"><button disabled="disabled">Reset</button></div>
 </div>

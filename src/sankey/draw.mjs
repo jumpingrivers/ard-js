@@ -459,7 +459,7 @@ const drawSankey = function(sankeyData) {
     return drill(filters, stepNumber);
   };
 
-  const drill = function(filters, stepNumber) {
+  const drill = function(filters) {
     const oldFilters = svg.datum().filters;
 
     const nOld = oldFilters.length;
@@ -611,8 +611,11 @@ const drawSankey = function(sankeyData) {
     
     // Dropdown labels
     dropdowns.selectAll('select')
-      .filter(d => d.stepNumber === stepNumber)
-      .call(updateDropdown, instance);
+      .each(function() {
+        select(this).call(updateDropdown, instance);
+      });
+
+    resetButton.attr('disabled', filters.length ? null : 'disabled');
 
     return true;
   };
@@ -703,6 +706,9 @@ const drawSankey = function(sankeyData) {
     })
     .attr('dominant-baseline', 'hanging')
     .style('font-weight', 'bold');
+
+  const resetButton = shadow.select('#reset button')
+    .on('click', () => drill([]) );
 };
 
 

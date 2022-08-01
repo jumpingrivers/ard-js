@@ -128,10 +128,10 @@ describe('sunburst.viz', function() {
     expect(sunburst.viz.childNodes.length).to.equal(0);
   });
 
-  // it('should hold a div containing an SVG in its shadow dom if rendering has taken place', function() {
-  //   const shadow = sunburst.render().viz.shadowRoot;
-  //   expect(shadow.querySelector('svg') instanceof Element).to.equal(true);
-  // });
+  it('should hold a div containing an SVG in its shadow dom if rendering has taken place', function() {
+    const shadow = sunburst.render().viz.shadowRoot;
+    expect(shadow.querySelector('svg') instanceof Element).to.equal(true);
+  });
 });
 
 

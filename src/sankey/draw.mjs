@@ -451,6 +451,7 @@ const drawSankey = function(sankeyData) {
 
   const drillUp = function(stepNumber, nSteps = 1) {
     const filters = svg.datum().filters.slice();
+    
     for (let i = 0; i < nSteps; i++) {
       const index = filters.findLastIndex(d => d.stepNumber === stepNumber);
       if (index !== -1) { filters.splice(index, 1); }
@@ -510,6 +511,10 @@ const drawSankey = function(sankeyData) {
       .style('stroke-opacity', 0)
       .remove();
   
+      
+    // Hide hover layer while we animate the nodes
+    hoverLayer.classed('hidden', true);
+    
     // Nodes
     const nodeUpdate = svg.select('#base-node-group')
       .selectAll('rect')
@@ -528,8 +533,6 @@ const drawSankey = function(sankeyData) {
       countUsed += count;
       return { y, height };
     };
-  
-    hoverLayer.classed('hidden', true);
 
     const nodeEnter = nodeUpdate.enter()
       .append('rect')
@@ -708,7 +711,7 @@ const drawSankey = function(sankeyData) {
     .style('font-weight', 'bold');
 
   const resetButton = shadow.select('#reset button')
-    .on('click', () => drill([]) );
+    .on('click', () => drawSankey.call(instance, sankeyData) );
 };
 
 

@@ -1,16 +1,13 @@
 import { create, select } from 'd3-selection';
 import { _addReadOnlyProp, properlyDefined } from '../utils/index.mjs';
 import { validateData, validateSteps } from './validate.mjs';
-import { processData } from './process-data.mjs';
-import { drawSankey } from './draw.mjs';
+// import { processData } from './process-data.mjs';
+// import { drawSunburst } from './draw.mjs';
 
 
-const createSankey = function(initData, initSteps) {
+const createSunburst = function(initData, initSteps) {
   const instance = {};
   let data, steps;
-  let aspect = 1.5;
-  let nodePopupTemplate = null;
-  let linkPopupTemplate = null;
   let altClickHandler = null;
 
   const addReadOnlyProp = _addReadOnlyProp(instance); 
@@ -50,19 +47,6 @@ const createSankey = function(initData, initSteps) {
 
   addReadOnlyProp('steps', steps => (steps === undefined) ? getSteps() : setSteps(steps));
 
-  // The aspect ratio
-  const getAspect = () => aspect;
-
-  const setAspect = function(a) {
-    if (!Number.isFinite(a) || a <= 0) {
-      throw new Error('aspect must be a number greater than 0');
-    }
-    aspect = a;
-    return instance;
-  };
-
-  addReadOnlyProp('aspect', aspect => (aspect === undefined) ? getAspect() : setAspect(aspect));
-
   // The alt+Click handler function
   const getAltClickHandler = () => altClickHandler;
 
@@ -79,38 +63,6 @@ const createSankey = function(initData, initSteps) {
     return setAltClickHandler(altClickHandler);
   });
 
-  // The node popup template
-  const getNodePopupTemplate = () => nodePopupTemplate;
-
-  const setNodePopupTemplate = function(t) {
-    if (t !== null && typeof t !== 'string') {
-      throw new Error('nodePopupTemplate must be a string or null');
-    }
-    nodePopupTemplate = t;
-    return instance;
-  };
-
-  addReadOnlyProp('nodePopupTemplate', function(nodePopupTemplate) {
-    if (nodePopupTemplate === undefined) { return getNodePopupTemplate(); }
-    return setNodePopupTemplate(nodePopupTemplate);
-  });
-
-  // The link popup template
-  const getLinkPopupTemplate = () => linkPopupTemplate;
-
-  const setLinkPopupTemplate = function(t) {
-    if (t !== null && typeof t !== 'string') {
-      throw new Error('linkPopupTemplate must be a string or null');
-    }
-    linkPopupTemplate = t;
-    return instance;
-  };
-
-  addReadOnlyProp('linkPopupTemplate', function(linkPopupTemplate) {
-    if (linkPopupTemplate === undefined) { return getLinkPopupTemplate(); }
-    return setLinkPopupTemplate(linkPopupTemplate);
-  });
-
   // The rendering function
   const render = function() {
     if (!data) {
@@ -119,10 +71,10 @@ const createSankey = function(initData, initSteps) {
     else if (!steps) {
       console.warn('Could not render anything as no steps defined');
     }
-    else {
-      const sankeyData = processData(data, steps);
-      drawSankey.call(instance, sankeyData);
-    }
+    // else {
+    //   const sankeyData = processData(data, steps);
+    //   drawSankey.call(instance, sankeyData);
+    // }
     return instance;
   };
 
@@ -133,4 +85,4 @@ const createSankey = function(initData, initSteps) {
 };
 
 
-export { createSankey };
+export { createSunburst };

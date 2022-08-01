@@ -2,7 +2,7 @@ import { create, select } from 'd3-selection';
 import { _addReadOnlyProp, properlyDefined } from '../utils/index.mjs';
 import { validateData, validateSteps } from './validate.mjs';
 import { processData } from './process-data.mjs';
-// import { drawSunburst } from './draw.mjs';
+import { drawSunburst } from './draw.mjs';
 
 
 const createSunburst = function(initData, initSteps) {
@@ -73,8 +73,7 @@ const createSunburst = function(initData, initSteps) {
     }
     else {
       const sunburstData = processData(data, steps);
-      console.log(sunburstData);
-      // drawSankey.call(instance, sankeyData);
+      drawSunburst.call(instance, sunburstData);
     }
     return instance;
   };

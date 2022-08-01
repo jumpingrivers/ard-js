@@ -354,7 +354,7 @@ const drawSankey = function(sankeyData) {
   const container = select(instance.viz);
   const widthWithPadding = baseWidth + 2 * padding;
   const heightWithPadding = widthWithPadding / instance.aspect();
-  const width = widthWithPadding - 2 * padding;
+  const width = baseWidth;
   const height = heightWithPadding - (padding + bottomPadding);
   const shadow = select(container.node().shadowRoot);
 

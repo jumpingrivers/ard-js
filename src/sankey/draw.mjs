@@ -451,7 +451,6 @@ const drawSankey = function(sankeyData) {
 
   const drillUp = function(stepNumber, nSteps = 1) {
     const filters = svg.datum().filters.slice();
-    
     for (let i = 0; i < nSteps; i++) {
       const index = filters.findLastIndex(d => d.stepNumber === stepNumber);
       if (index !== -1) { filters.splice(index, 1); }
@@ -522,9 +521,21 @@ const drawSankey = function(sankeyData) {
 
     let countUsed = 0;
     const isDrillDown = nNew > nOld;
-    const oldData = isDrillDown ? filters[nNew - 1] : oldFilters[nOld - 1];
-    const top = oldData.y0;
-    const singleCountHeight = (oldData.y1 - oldData.y0) / oldData.entries.length;
+    let target;
+
+    if (isDrillDown) { target = filters[nNew - 1]; }
+    else {
+      for (const oldFilter of oldFilters) {
+        if (!filters.includes(oldFilter)) {
+          // The node may have moved since the filter was originally added,
+          // we need to find where it is now
+          target = newData.lookup[oldFilter.id];
+          break;
+        }
+      }
+    }
+    const top = target.y0;
+    const singleCountHeight = (target.y1 - target.y0) / target.entries.length;
 
     const getYAttributes = function(data) {
       const count = data.entries.length;

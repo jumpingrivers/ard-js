@@ -4,3 +4,7 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+[id="sunburst-container"] {
+  max-width: 500px;
+}

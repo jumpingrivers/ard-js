@@ -1,6 +1,6 @@
 import { select } from 'd3-selection';
 import 'd3-transition';
-import { partition } from 'd3-hierarchy';
+import { hierarchy, partition } from 'd3-hierarchy';
 import { arc } from 'd3-shape';
 import vizTemplate from './viz-templates/index.html';
 
@@ -37,16 +37,10 @@ const drawSunburst = function(sunburstData) {
     .attr('id', 'hover-layer')
     .style('pointer-events', 'none');
 
-  const pathGenerator = arc()
-    .startAngle(d => d.x0)
-    .endAngle(d => d.x1)
-    .innerRadius(d => Math.sqrt(d.y0))
-    .outerRadius(d => Math.sqrt(d.y1));
-
-  const part = partition()
-    .size([2 * Math.PI, Math.pow(radius, 2)])(sunburstData);
+  let pathGenerator;
 
   const mouseover = function(_, d) {
+    mouseout();
     const data = d.ancestors().filter(d => d.depth);
 
     hoverLayer.selectAll('path')
@@ -57,11 +51,11 @@ const drawSunburst = function(sunburstData) {
       .style('fill', 'red')
       .style('stroke', 'black');
 
-    const percent = (d.value / sunburstData.value) * 100;
+    const percent = (d.value / svg.datum().value) * 100;
 
     textLayer
       .append('text')
-      .text(`${percent.toPrecision(2)}%`)
+      .text(`${percent >= 100 ? '100' : percent.toPrecision(2)}%`)
       .style('text-anchor', 'middle')
       .style('font-size', '75px')
       .style('dominant-baseline', 'middle');
@@ -82,18 +76,78 @@ const drawSunburst = function(sunburstData) {
     textLayer.text('');
     breadcrumb.text('');
   };
- 
-  baseLayer.selectAll('path')
-    .data(part.descendants().filter(function(d) {
-      return d.depth;
-    }))
-    .enter()
-    .append('path')
-    .attr('d', pathGenerator)
-    .style('fill', '#add8e6')
-    .style('stroke', '#888888')
-    .on('mouseover', mouseover)
-    .on('mouseout', mouseout);
+
+  let stack = [sunburstData];
+
+  const click = function(evt, d) {
+    let drilled = false;
+
+    if (evt.shiftKey) {
+      if (d.depth === 1 && stack.length > 1) {
+        const root = stack.pop();
+        drawArcs(root);
+        drilled = true;
+      }
+    }
+    else {
+      const ancestors = d.ancestors().reverse().map(d => d.data);
+      for (const ancestor of ancestors) {
+        if (!stack.includes(ancestor)) { stack.push(ancestor); }
+      }
+      drawArcs();
+      drilled = true;
+    }
+
+    if (!drilled) { return; }
+
+    const x = evt.clientX;
+    const y = evt.clientY;
+    const newSelection = select(shadow.node().elementFromPoint(x, y));
+    if (!newSelection.classed('sunburst-section')) { return; }
+    newSelection.dispatch('mouseover');
+  };
+  
+
+  const drawArcs = function() {
+    const root = stack[stack.length - 1];
+
+    const h = hierarchy(root)
+      .sum(d => d.value || 0)
+      .sort((a, b) => b.value - a.value);
+
+    const part = partition()
+      .size([2 * Math.PI, Math.pow(radius, 2)])(h);
+
+    svg.datum(part);
+
+    const data = part.descendants().filter(d => d.depth);
+
+    pathGenerator = arc()
+      .startAngle(d => d.x0)
+      .endAngle(d => d.x1)
+      .innerRadius(d => Math.sqrt(d.y0))
+      .outerRadius(d => Math.sqrt(d.y1));
+
+    const paths =  baseLayer.selectAll('path')
+      .data(data)
+      .attr('d', pathGenerator);
+
+    paths.enter()
+      .append('path')
+      .attr('class', 'sunburst-section')
+      .attr('d', pathGenerator)
+      .style('fill', '#add8e6')
+      .style('stroke', '#888888')
+      .on('mouseover', mouseover)
+      .on('mouseout', mouseout)
+      .filter(d => d.height)
+      .style('cursor', 'pointer')
+      .on('click', click);
+
+    paths.exit().remove();
+  };
+
+  drawArcs();
 };
 
 

@@ -89,7 +89,7 @@ const drawSunburst = function(sunburstData) {
         drilled = true;
       }
     }
-    else {
+    else if (d.height) {
       const ancestors = d.ancestors().reverse().map(d => d.data);
       for (const ancestor of ancestors) {
         if (!stack.includes(ancestor)) { stack.push(ancestor); }
@@ -130,7 +130,8 @@ const drawSunburst = function(sunburstData) {
 
     const paths =  baseLayer.selectAll('path')
       .data(data)
-      .attr('d', pathGenerator);
+      .attr('d', pathGenerator)
+      .style('cursor', d => d.height ? 'pointer' : null);
 
     paths.enter()
       .append('path')
@@ -140,9 +141,8 @@ const drawSunburst = function(sunburstData) {
       .style('stroke', '#888888')
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
-      .filter(d => d.height)
-      .style('cursor', 'pointer')
-      .on('click', click);
+      .on('click', click)
+      .style('cursor', d => d.height ? 'pointer' : null);
 
     paths.exit().remove();
 

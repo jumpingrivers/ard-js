@@ -145,7 +145,12 @@ const drawSunburst = function(sunburstData) {
       .on('click', click);
 
     paths.exit().remove();
+
+    resetButton.attr('disabled', stack.length > 1 ? null : 'disabled');
   };
+
+  const resetButton = shadow.select('#reset button')
+    .on('click', () => drawSunburst.call(instance, sunburstData));
 
   drawArcs();
 };

@@ -2,6 +2,7 @@ import { select } from 'd3-selection';
 import 'd3-transition';
 import { hierarchy, partition } from 'd3-hierarchy';
 import { arc } from 'd3-shape';
+import { interpolateNumber } from 'd3-interpolate';
 import vizTemplate from './viz-templates/index.html';
 
 const baseWidth = 1000;
@@ -129,10 +130,31 @@ const drawSunburst = function(sunburstData) {
       .outerRadius(d => Math.sqrt(d.y1));
 
     const paths =  baseLayer.selectAll('path')
-      .data(data)
-      .attr('d', pathGenerator)
+      .data(data, d => d.data.id)
       .classed('inner-annulus', d => d.depth === 1)
       .classed('outer-annulus', d => !d.height);
+
+    hoverLayer.classed('hidden', true);
+
+    paths
+      .transition()
+      .duration(1000)
+      .attrTween('d', function(d) {
+        const start = d.data.start;
+        const x0 = interpolateNumber(start.x0, d.x0);
+        const x1 = interpolateNumber(start.x1, d.x1);
+        const y0 = interpolateNumber(start.y0, d.y0);
+        const y1 = interpolateNumber(start.y1, d.y1);
+        d.data.start = d;
+        return function(t) {
+          const props = { x0: x0(t), x1: x1(t), y0: y0(t), y1: y1(t) };
+          return pathGenerator(props);
+        };
+      })
+      .end()
+      .then(function() {
+        hoverLayer.classed('hidden', false);
+      });
 
     paths.enter()
       .append('path')
@@ -144,7 +166,11 @@ const drawSunburst = function(sunburstData) {
       .style('stroke', '#888888')
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
-      .on('click', click);
+      .on('click', click)
+      .each(function(d) {
+        const { x0, x1, y0, y1 } = d;
+        d.data.start = { x0, x1, y0, y1};
+      });
 
     paths.exit().remove();
 

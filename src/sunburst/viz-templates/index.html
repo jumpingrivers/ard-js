@@ -36,9 +36,24 @@
     display: block;
     width: 100%;
   }
+
+  [id="reset"] {
+    margin-top: 10px;
+  }
+
+  [id="reset"] button {
+    display: block;
+    float: right;
+    cursor: pointer;
+  }
+
+  [id="reset"] button[disabled] {
+    cursor: not-allowed;
+  }
 </style>
 
 <div id="wrapper">
   <div id="breadcrumb"></div>
   <svg id="graphic"></svg>
+  <div id="reset"><button disabled="disabled">Reset</button></div>
 </div>

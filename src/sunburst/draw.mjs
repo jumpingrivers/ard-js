@@ -131,28 +131,39 @@ const drawSunburst = function(sunburstData) {
     const paths =  baseLayer.selectAll('path')
       .data(data)
       .attr('d', pathGenerator)
-      .style('cursor', d => d.height ? 'pointer' : null);
+      .classed('inner-annulus', d => d.depth === 1)
+      .classed('outer-annulus', d => !d.height);
 
     paths.enter()
       .append('path')
       .attr('class', 'sunburst-section')
       .attr('d', pathGenerator)
+      .classed('inner-annulus', d => d.depth === 1)
+      .classed('outer-annulus', d => !d.height)
       .style('fill', '#add8e6')
       .style('stroke', '#888888')
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
-      .on('click', click)
-      .style('cursor', d => d.height ? 'pointer' : null);
+      .on('click', click);
 
     paths.exit().remove();
 
     resetButton.attr('disabled', stack.length > 1 ? null : 'disabled');
+    baseLayer.classed('drilled-down', stack.length > 1);
   };
 
   const resetButton = shadow.select('#reset button')
     .on('click', () => drawSunburst.call(instance, sunburstData));
 
   drawArcs();
+
+  select(document)
+    .on('keydown.shift', function(evt) {
+      if (evt.key === 'Shift') { baseLayer.classed('shift-pressed', true); }
+    })
+    .on('keyup.shift', function(evt) {
+      if (evt.key === 'Shift') { baseLayer.classed('shift-pressed', false); }
+    });
 };
 
 

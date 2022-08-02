@@ -50,6 +50,22 @@
   [id="reset"] button[disabled] {
     cursor: not-allowed;
   }
+
+  .sunburst-section {
+    cursor: pointer;
+  }
+
+  .sunburst-section.outer-annulus {
+    cursor: default;
+  }
+
+  .shift-pressed .sunburst-section {
+    cursor: default;
+  }
+
+  .shift-pressed.drilled-down .inner-annulus {
+    cursor: pointer;
+  }
 </style>
 
 <div id="wrapper">

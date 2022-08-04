@@ -86,6 +86,11 @@ const drawSunburst = function(sunburstData) {
   let stack = [sunburstData];
 
   const click = function(evt, d) {
+    if (evt.altKey && instance.altClickHandler() !== null) {
+      instance.altClickHandler().call(instance, evt, d);
+      return;
+    }
+    
     let drilled = false;
 
     if (evt.shiftKey) {

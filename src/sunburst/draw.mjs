@@ -3,9 +3,11 @@ import 'd3-transition';
 import { hierarchy, partition } from 'd3-hierarchy';
 import { arc } from 'd3-shape';
 import { interpolateNumber } from 'd3-interpolate';
+import { easeSinInOut as ease } from 'd3-ease';
 import vizTemplate from './viz-templates/index.html';
 
 const baseWidth = 1000;
+const animationDuration = 2000;
 
 
 const drawSunburst = function(sunburstData) {
@@ -27,6 +29,9 @@ const drawSunburst = function(sunburstData) {
 
   const breadcrumb = shadow.select('#breadcrumb')
     .attr('viewBox', `0 0 ${width} ${breadcrumbHeight}`);
+
+  const tempLayer = svg.append('g')
+    .attr('id', 'temp-layer');
 
   const baseLayer = svg.append('g')
     .attr('id', 'base-layer');
@@ -109,7 +114,7 @@ const drawSunburst = function(sunburstData) {
   };
   
 
-  const drawArcs = function() {
+  const drawArcs = function(animateEntrance = true) {
     const root = stack[stack.length - 1];
 
     const h = hierarchy(root)
@@ -135,28 +140,48 @@ const drawSunburst = function(sunburstData) {
       .classed('outer-annulus', d => !d.height);
 
     hoverLayer.classed('hidden', true);
+    textLayer.classed('hidden', true);
+
+    const pathTween = function(from, to) {
+      const x0 = interpolateNumber(from.x0, to.x0);
+      const x1 = interpolateNumber(from.x1, to.x1);
+      const y0 = interpolateNumber(from.y0, to.y0);
+      const y1 = interpolateNumber(from.y1, to.y1);
+      
+      return function(t) {
+        const props = { x0: x0(t), x1: x1(t), y0: y0(t), y1: y1(t) };
+        return pathGenerator(props);
+      };
+    };
+
+    const scaleDisappear = function() {
+      return function(t) {
+        return `scale(${1-t})`;
+      };
+    };
+
+    const scaleAppear = function() {
+      return function(t) {
+        return `scale(${t})`;
+      };
+    };
 
     paths
       .transition()
-      .duration(1000)
-      .attrTween('d', function(d) {
-        const start = d.data.start;
-        const x0 = interpolateNumber(start.x0, d.x0);
-        const x1 = interpolateNumber(start.x1, d.x1);
-        const y0 = interpolateNumber(start.y0, d.y0);
-        const y1 = interpolateNumber(start.y1, d.y1);
-        d.data.start = d;
-        return function(t) {
-          const props = { x0: x0(t), x1: x1(t), y0: y0(t), y1: y1(t) };
-          return pathGenerator(props);
-        };
+      .duration(animationDuration)
+      .ease(ease)
+      .attrTween('d', d => pathTween(d.data.start, d))
+      .on('end', function(d) {
+        const { x0, x1, y0, y1 } = d;
+        d.data.start = { x0, x1, y0, y1 };
       })
       .end()
       .then(function() {
         hoverLayer.classed('hidden', false);
+        textLayer.classed('hidden', false);
       });
 
-    paths.enter()
+    const pathsEnter = paths.enter()
       .append('path')
       .attr('class', 'sunburst-section')
       .attr('d', pathGenerator)
@@ -172,7 +197,41 @@ const drawSunburst = function(sunburstData) {
         d.data.start = { x0, x1, y0, y1};
       });
 
-    paths.exit().remove();
+    if (animateEntrance) {
+      const enterLayer = tempLayer.append('g');
+
+      pathsEnter
+        .each(function() { enterLayer.node().appendChild(this); });
+
+      enterLayer
+        .style('opacity', 0)
+        .transition()
+        .duration(animationDuration)
+        .ease(ease)
+        .style('opacity', 1)
+        .styleTween('transform', scaleAppear)
+        .remove()
+        .end()
+        .then(function() {
+          pathsEnter
+            .each(function() { baseLayer.node().appendChild(this); });
+        });
+    }
+
+    const exitLayer = tempLayer.append('g')
+      .style('pointer-events', 'none');
+
+    paths.exit()
+      .each(function() { exitLayer.node().appendChild(this); });
+
+    exitLayer
+      .style('opacity', 1)
+      .transition()
+      .duration(animationDuration)
+      .ease(ease)
+      .style('opacity', 0)
+      .styleTween('transform', scaleDisappear)
+      .remove();
 
     resetButton.attr('disabled', stack.length > 1 ? null : 'disabled');
     baseLayer.classed('drilled-down', stack.length > 1);
@@ -181,7 +240,7 @@ const drawSunburst = function(sunburstData) {
   const resetButton = shadow.select('#reset button')
     .on('click', () => drawSunburst.call(instance, sunburstData));
 
-  drawArcs();
+  drawArcs(false);
 
   select(document)
     .on('keydown.shift', function(evt) {

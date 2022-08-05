@@ -4,10 +4,14 @@ import { hierarchy, partition } from 'd3-hierarchy';
 import { arc } from 'd3-shape';
 import { interpolateNumber } from 'd3-interpolate';
 import { easeSinInOut as ease } from 'd3-ease';
+import { hcl } from 'd3-color';
+import { createColourLookup } from '../utils/index.mjs';
 import vizTemplate from './viz-templates/index.html';
+
 
 const baseWidth = 1000;
 const animationDuration = 2000;
+const hoverBackgroundOpacity = 0.5;
 
 
 const drawSunburst = function(sunburstData) {
@@ -48,13 +52,15 @@ const drawSunburst = function(sunburstData) {
   const mouseover = function(_, d) {
     mouseout();
     const data = d.ancestors().filter(d => d.depth);
+    
+    baseLayer.classed('background', true);
 
     hoverLayer.selectAll('path')
       .data(data)
       .enter()
       .append('path')
       .attr('d', pathGenerator)
-      .style('fill', 'red')
+      .style('fill', d => getColor(d.data))
       .style('stroke', 'black');
 
     const percent = (d.value / svg.datum().value) * 100;
@@ -78,6 +84,7 @@ const drawSunburst = function(sunburstData) {
   };
 
   const mouseout = function() {
+    baseLayer.classed('background', false);
     hoverLayer.text('');
     textLayer.text('');
     breadcrumb.text('');
@@ -117,17 +124,39 @@ const drawSunburst = function(sunburstData) {
     if (!newSelection.classed('sunburst-section')) { return; }
     newSelection.dispatch('mouseover');
   };
-  
 
-  const drawArcs = function(animateEntrance = true) {
+  const constructHierarchy = function() {
     const root = stack[stack.length - 1];
 
-    const h = hierarchy(root)
+    return hierarchy(root)
       .sum(d => d.value || 0)
       .sort((a, b) => b.value - a.value);
+  };
+  
+  const getColor = createColourLookup(instance.colorOverrides(), function(d) {
+    const palette = instance.palette();
+    let color =  hcl(palette[d.wedgeIndex % palette.length]);
+    // Next three numbers are very much experimental
+    const chromaPower = 1/2;
+    const luminancePower = 1/3;
+    const luminanceDenominator = 5;
+    color.c = color.c / Math.pow(d.depth, chromaPower);
+    const lRemaining = 100 - color.l;
+    const lExtra = lRemaining * (Math.pow(d.depth-1, luminancePower)/luminanceDenominator);
+    color.l = color.l + lExtra;
+    return color.toString();
+  });
 
+  constructHierarchy()
+    .each(function(d, i) {
+      if (!i) { return; }
+      d.data.wedgeIndex = d.depth === 1 ? i - 1 : d.parent.data.wedgeIndex;
+      d.color = getColor(d.data);
+    });
+
+  const drawArcs = function(animateEntrance = true) {
     const part = partition()
-      .size([2 * Math.PI, Math.pow(radius, 2)])(h);
+      .size([2 * Math.PI, Math.pow(radius, 2)])(constructHierarchy());
 
     svg.datum(part);
 
@@ -171,6 +200,8 @@ const drawSunburst = function(sunburstData) {
       };
     };
 
+    if (animateEntrance) { baseLayer.classed('animating', true); }
+
     paths
       .transition()
       .duration(animationDuration)
@@ -182,6 +213,7 @@ const drawSunburst = function(sunburstData) {
       })
       .end()
       .then(function() {
+        baseLayer.classed('animating', false);
         hoverLayer.classed('hidden', false);
         textLayer.classed('hidden', false);
       });
@@ -192,8 +224,9 @@ const drawSunburst = function(sunburstData) {
       .attr('d', pathGenerator)
       .classed('inner-annulus', d => d.depth === 1)
       .classed('outer-annulus', d => !d.height)
-      .style('fill', '#add8e6')
-      .style('stroke', '#888888')
+      .style('fill', d => getColor(d.data))
+      .style('stroke', '#000')
+      .style('stroke-width', '0.25px')
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
       .on('click', click)
@@ -230,7 +263,7 @@ const drawSunburst = function(sunburstData) {
       .each(function() { exitLayer.node().appendChild(this); });
 
     exitLayer
-      .style('opacity', 1)
+      .style('opacity', hoverBackgroundOpacity)
       .transition()
       .duration(animationDuration)
       .ease(ease)

@@ -8,7 +8,6 @@ const sankey = chartMaker
 const sankeyContainer = document.querySelector('#sankey-container');
 sankeyContainer.appendChild(sankey.viz);
 
-
 const sunburst = chartMaker
   .createSunburst(data, steps.flat())
   .render();

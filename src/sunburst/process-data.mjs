@@ -7,19 +7,26 @@ const processData = function(inputData, steps) {
 
   let counter = 0;
 
-  const objectifyArray = function(arr) {
+  const objectifyArray = function(arr, depth) {
     const [name, value] = arr;
-    const obj = { name, id: counter++ };
+  
+    const obj = { name, depth, id: counter++ };
+
+    if (depth) {
+      obj.group = steps[depth - 1];
+    }
+
     if (Array.isArray(value)) {
-      obj.children = value.map(objectifyArray);
+      obj.children = value.map(v => objectifyArray(v, depth + 1));
     }
     else {
       obj.value = value;
     }
+
     return obj;
   };
-
-  return objectifyArray(['root', rolledData]);
+  
+  return objectifyArray(['root', rolledData], 0);
 };
 
 

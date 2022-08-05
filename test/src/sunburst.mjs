@@ -161,3 +161,53 @@ describe('sunburst.altClickHandler', function() {
     expect(sunburst.altClickHandler((func)).altClickHandler()).to.equal(func);
   });
 });
+
+
+describe('sunburst.palette', function() {
+  it('should throw if passed an argument other than an array or undefined', function() {
+    expect(() => sunburst.palette({})).to.throw();
+    expect(() => sunburst.palette(7)).to.throw();
+    expect(() => sunburst.palette(null)).to.throw(); 
+  });
+
+  it('should throw if passed an array with no elements', function() {
+    expect(() => sunburst.palette([])).to.throw();
+  });
+
+  it('should throw if passed an array with non-string elements', function() {
+    expect(() => sunburst.palette(['blue', 7])).to.throw();
+  });
+
+  it('should default to an array', function() {
+    expect(Array.isArray(sunburst.palette())).to.equal(true);
+    expect(sunburst.palette().length > 1).to.equal(true);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    const arr = ['blue', 'pink'];
+    expect(sunburst.palette(arr).palette()).to.equal(arr);
+  });
+});
+
+
+describe('sunburst.colorOverrides', function() {
+  it('should throw if passed an argument other than an array or undefined', function() {
+    expect(() => sunburst.colorOverrides({})).to.throw();
+    expect(() => sunburst.colorOverrides(7)).to.throw();
+    expect(() => sunburst.colorOverrides(null)).to.throw(); 
+  });
+
+  it('should throw if passed an array with non-object elements', function() {
+    expect(() => sunburst.colorOverrides([{}, 7])).to.throw();
+  });
+
+  it('should default to an empty array', function() {
+    expect(Array.isArray(sunburst.colorOverrides())).to.equal(true);
+    expect(sunburst.colorOverrides().length === 0).to.equal(true);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    const arr = [{name: 'a', color: 'blue'}];
+    expect(sunburst.colorOverrides(arr).colorOverrides()).to.equal(arr);
+  });
+});

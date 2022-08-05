@@ -1,4 +1,5 @@
 import { create, select } from 'd3-selection';
+import { schemeTableau10 } from 'd3-scale-chromatic';
 import { _addReadOnlyProp, properlyDefined } from '../utils/index.mjs';
 import { validateData, validateSteps } from './validate.mjs';
 import { processData } from './process-data.mjs';
@@ -9,6 +10,8 @@ const createSunburst = function(initData, initSteps) {
   const instance = {};
   let data, steps;
   let altClickHandler = null;
+  let colorOverrides = [];
+  let palette = schemeTableau10;
 
   const addReadOnlyProp = _addReadOnlyProp(instance); 
 
@@ -61,6 +64,47 @@ const createSunburst = function(initData, initSteps) {
   addReadOnlyProp('altClickHandler', function(altClickHandler) {
     if (altClickHandler === undefined) { return getAltClickHandler(); }
     return setAltClickHandler(altClickHandler);
+  });
+
+  // The palette function
+  const getPalette = () => palette;
+
+  const setPalette = function(a) {
+    if (!Array.isArray(a)) {
+      throw new Error('palette must be an array');
+    }
+    if (a.length < 2) {
+      throw new Error('palette must be an array with at least one element');
+    }
+    if(!a.every(d => typeof d === 'string')) {
+      throw new Error('palette colors must be strings');
+    }
+    palette = a;
+    return instance;
+  };
+
+  addReadOnlyProp('palette', function(palette) {
+    if (palette === undefined) { return getPalette(); }
+    return setPalette(palette);
+  });
+
+  // The color-overrides function
+  const getColorOverrides = () => colorOverrides;
+
+  const setColorOverrides = function(a) {
+    if (!Array.isArray(a)) {
+      throw new Error('colorOverrides must be an array');
+    }
+    if (!a.every(d => typeof d === 'object')) {
+      throw new Error('colorOverrides elements must be objects');
+    }
+    colorOverrides = a;
+    return instance;
+  };
+
+  addReadOnlyProp('colorOverrides', function(colorOverrides) {
+    if (colorOverrides === undefined) { return getColorOverrides(); }
+    return setColorOverrides(colorOverrides);
   });
 
   // The rendering function

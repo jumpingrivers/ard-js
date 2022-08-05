@@ -12,6 +12,9 @@ const createSankey = function(initData, initSteps) {
   let nodePopupTemplate = null;
   let linkPopupTemplate = null;
   let altClickHandler = null;
+  let color = '#add8e6';
+  let hoverColor = '#ff0000';
+  let colorOverrides = [];
 
   const addReadOnlyProp = _addReadOnlyProp(instance); 
 
@@ -109,6 +112,57 @@ const createSankey = function(initData, initSteps) {
   addReadOnlyProp('linkPopupTemplate', function(linkPopupTemplate) {
     if (linkPopupTemplate === undefined) { return getLinkPopupTemplate(); }
     return setLinkPopupTemplate(linkPopupTemplate);
+  });
+
+  // The default node color
+  const getColor = () => color;
+
+  const setColor = function(c) {
+    if (typeof c !== 'string') {
+      throw new Error('color must be a string');
+    }
+    color = c;
+    return instance;
+  };
+
+  addReadOnlyProp('color', function(color) {
+    if (color === undefined) { return getColor(); }
+    return setColor(color);
+  });
+
+  // The node color on hover
+  const getHoverColor = () => hoverColor;
+
+  const setHoverColor = function(h) {
+    if (typeof h !== 'string') {
+      throw new Error('hoverColor must be a string');
+    }
+    hoverColor = h;
+    return instance;
+  };
+
+  addReadOnlyProp('hoverColor', function(hoverColor) {
+    if (hoverColor === undefined) { return getHoverColor(); }
+    return setHoverColor(hoverColor);
+  });
+
+  // The color-overrides function
+  const getColorOverrides = () => colorOverrides;
+
+  const setColorOverrides = function(a) {
+    if (!Array.isArray(a)) {
+      throw new Error('colorOverrides must be an array');
+    }
+    if (!a.every(d => typeof d === 'object')) {
+      throw new Error('colorOverrides elements must be objects');
+    }
+    colorOverrides = a;
+    return instance;
+  };
+
+  addReadOnlyProp('colorOverrides', function(colorOverrides) {
+    if (colorOverrides === undefined) { return getColorOverrides(); }
+    return setColorOverrides(colorOverrides);
   });
 
   // The rendering function

@@ -2,6 +2,7 @@ import { create, select } from 'd3-selection';
 import 'd3-transition';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
 import Handlebars from 'handlebars';
+import { createColourLookup } from '../utils/index.mjs';
 import { processData } from './process-data.mjs';
 import vizTemplate from './viz-templates/index.html';
 import nodeTemplateString from './popup-templates/node.html';
@@ -24,26 +25,32 @@ const getSvg = function(instance) {
 };
 
 
-const drawNode = function(selection, hover) {
+const drawNode = function(selection, color) {
   selection
     .attr('class', 'node')
     .attr('x', d => d.x0)
     .attr('y', d => d.y0)
     .attr('width', d => d.x1 - d.x0)
     .attr('height', d => d.y1 - d.y0)
-    .style('fill', hover ? 'red' : '#add8e6')
     .style('cursor', 'pointer');
+
+  if (color) {
+    selection.style('fill', color);
+  }
 };
 
 
-const drawLink = function(selection, hover) {
+const drawLink = function(selection, color) {
   selection
     .attr('class', 'link')
     .attr('d', sankeyLinkHorizontal())
     .attr('stroke-width', d => d.width)
-    .style('stroke', hover ? 'red' : '#add8e6')
     .style('stroke-opacity', linkOpacity)
     .style('fill', 'none');
+
+  if (color) {
+    selection.style('stroke', color);
+  }
 };
 
 
@@ -65,11 +72,12 @@ const drawText = function(selection, nSteps) {
 
 
 const drawHoverLayer = function(hoveredSelection, hoverData, lookup) {
+  const instance = this;
   const { id, sourceId, targetId } = hoveredSelection.datum();
   const { sankeyLinks, sankeyNodes, steps } = hoverData;
   const nSteps = steps.length;
   
-  const svg = getSvg(this);
+  const svg = getSvg(instance);
   const hoverLayer = svg.select('#hover-layer');
   const hoverNodeGroup = hoverLayer.append('g');
   const hoverLinkGroup = hoverLayer.append('g');
@@ -184,8 +192,8 @@ const drawHoverLayer = function(hoveredSelection, hoverData, lookup) {
     });
 
   // Render the nodes and links
-  hoverNodes.call(drawNode, true);
-  hoverLinks.call(drawLink, true);
+  hoverNodes.call(drawNode, instance.hoverColor());
+  hoverLinks.call(drawLink, instance.hoverColor());
 };
 
 
@@ -387,6 +395,8 @@ const drawSankey = function(sankeyData) {
     .attr('id', 'label-layer')
     .style('pointer-events', 'none');
 
+  const getColor = createColourLookup(instance.colorOverrides(), () => instance.color());
+
   const mouseover = function(_, d) {
     // The next call is useful when resizing elements
     // It seems like sometimes resizing leads to mouseover calls without mouseout ones???
@@ -481,7 +491,9 @@ const drawSankey = function(sankeyData) {
   
     linkUpdate.enter()
       .append('path')
-      .call(drawLink)
+      .each(function(d) {
+        drawLink(select(this), getColor(d.source));
+      })
       .on('mouseover', mouseover)
       .on('mouseout', mouseout)
       .on('mousemove', mousemove)
@@ -555,7 +567,7 @@ const drawSankey = function(sankeyData) {
     if (isDrillDown) {
       nodeEnter
         .sort((a, b) => ascending(a.y0, b.y0))
-        .call(drawNode)
+        .call(drawNode, getColor)
         .each(function(d) {
           const { y, height } = getYAttributes(d);
           select(this).attr('y', y).attr('height', height);
@@ -572,7 +584,7 @@ const drawSankey = function(sankeyData) {
         .transition()
         .delay(animationDuration)
         .duration(0)
-        .call(drawNode);
+        .call(drawNode, getColor);
 
       nodeUpdate.exit()
         .sort((a, b) => ascending(a.y0, b.y0))
@@ -638,7 +650,9 @@ const drawSankey = function(sankeyData) {
     .data(sankeyLinks, d => d.id)
     .enter()
     .append('path')
-    .call(drawLink)
+    .each(function(d) {
+      drawLink(select(this), getColor(d.source));
+    })
     .on('mouseover', mouseover)
     .on('mouseout', mouseout)
     .on('mousemove', mousemove);
@@ -647,7 +661,9 @@ const drawSankey = function(sankeyData) {
     .data(sankeyNodes, d => d.id)
     .enter()
     .append('rect')
-    .call(drawNode)
+    .each(function(d) {
+      drawNode(select(this), getColor(d));
+    })
     .on('mouseover', mouseover)
     .on('mouseout', mouseout)
     .on('mousemove', mousemove)

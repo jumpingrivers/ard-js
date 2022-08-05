@@ -236,3 +236,66 @@ describe('sankey.altClickHandler', function() {
     expect(sankey.altClickHandler((func)).altClickHandler()).to.equal(func);
   });
 });
+
+
+describe('sankey.color', function() {
+  it('should throw if passed an argument other than an a string or undefined', function() {
+    expect(() => sankey.color({})).to.throw();
+    expect(() => sankey.color(7)).to.throw();
+    expect(() => sankey.color([])).to.throw();
+    expect(() => sankey.color(null)).to.throw(); 
+  });
+
+  it('should default to a six-digit hex color', function() {
+    expect(typeof sankey.color()).to.equal('string');
+    expect(sankey.color().charAt(0)).to.equal('#');
+    expect(sankey.color().length).to.equal(7);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    expect(sankey.color('teal').color()).to.equal('teal');
+  });
+});
+
+
+describe('sankey.hoverColor', function() {
+  it('should throw if passed an argument other than an a string or undefined', function() {
+    expect(() => sankey.hoverColor({})).to.throw();
+    expect(() => sankey.hoverColor(7)).to.throw();
+    expect(() => sankey.hoverColor([])).to.throw();
+    expect(() => sankey.hoverColor(null)).to.throw(); 
+  });
+
+  it('should default to a six-digit hex hoverColor', function() {
+    expect(typeof sankey.hoverColor()).to.equal('string');
+    expect(sankey.hoverColor().charAt(0)).to.equal('#');
+    expect(sankey.hoverColor().length).to.equal(7);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    expect(sankey.hoverColor('teal').hoverColor()).to.equal('teal');
+  });
+});
+
+
+describe('sankey.colorOverrides', function() {
+  it('should throw if passed an argument other than an array or undefined', function() {
+    expect(() => sankey.colorOverrides({})).to.throw();
+    expect(() => sankey.colorOverrides(7)).to.throw();
+    expect(() => sankey.colorOverrides(null)).to.throw(); 
+  });
+
+  it('should throw if passed an array with non-object elements', function() {
+    expect(() => sankey.colorOverrides([{}, 7])).to.throw();
+  });
+
+  it('should default to an empty array', function() {
+    expect(Array.isArray(sankey.colorOverrides())).to.equal(true);
+    expect(sankey.colorOverrides().length === 0).to.equal(true);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    const arr = [{name: 'a', color: 'blue'}];
+    expect(sankey.colorOverrides(arr).colorOverrides()).to.equal(arr);
+  });
+});

@@ -47,11 +47,13 @@ const drawSunburst = function(sunburstData) {
     .attr('id', 'hover-layer')
     .style('pointer-events', 'none');
 
+  const lookupMap = new Map();
   let pathGenerator;
 
   const mouseover = function(_, d) {
     mouseout();
     const data = d.ancestors().filter(d => d.depth);
+    const breadData = lookupMap.get(d.data).ancestors().filter(d => d.depth);
     
     baseLayer.classed('background', true);
 
@@ -73,7 +75,7 @@ const drawSunburst = function(sunburstData) {
       .style('dominant-baseline', 'middle');
 
     breadcrumb.selectAll('span')
-      .data(data.slice().reverse())
+      .data(breadData.reverse())
       .enter()
       .append('span')
       .text(function(d) {
@@ -152,6 +154,7 @@ const drawSunburst = function(sunburstData) {
       if (!i) { return; }
       d.data.wedgeIndex = d.depth === 1 ? i - 1 : d.parent.data.wedgeIndex;
       d.color = getColor(d.data);
+      lookupMap.set(d.data, d);
     });
 
   const drawArcs = function(animateEntrance = true) {

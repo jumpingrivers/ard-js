@@ -50,10 +50,25 @@ const drawSunburst = function(sunburstData) {
   const lookupMap = new Map();
   let pathGenerator;
 
+  const drawBreadcrumb = function(data) {
+    if (data === undefined) { data = stack.slice(1); }
+
+    breadcrumb.text('');
+
+    breadcrumb.selectAll('span')
+      .data(data)
+      .enter()
+      .append('span')
+      .text(function(d) {
+        const prefix = '';
+        const suffix = '';
+        return `${prefix}${d.name}${suffix}`;
+      });
+  };
+
   const mouseover = function(_, d) {
     mouseout();
     const data = d.ancestors().filter(d => d.depth);
-    const breadData = lookupMap.get(d.data).ancestors().filter(d => d.depth);
     
     baseLayer.classed('background', true);
 
@@ -74,15 +89,13 @@ const drawSunburst = function(sunburstData) {
       .style('font-size', '75px')
       .style('dominant-baseline', 'middle');
 
-    breadcrumb.selectAll('span')
-      .data(breadData.reverse())
-      .enter()
-      .append('span')
-      .text(function(d) {
-        const prefix = '';
-        const suffix = '';
-        return `${prefix}${d.data.name}${suffix}`;
-      });
+    const breadData = lookupMap.get(d.data)
+      .ancestors()
+      .filter(d => d.depth)
+      .reverse()
+      .map(d => d.data);
+
+    drawBreadcrumb(breadData);
   };
 
   const mouseout = function() {
@@ -90,6 +103,7 @@ const drawSunburst = function(sunburstData) {
     hoverLayer.text('');
     textLayer.text('');
     breadcrumb.text('');
+    drawBreadcrumb();
   };
 
   let stack = [sunburstData];
@@ -114,6 +128,7 @@ const drawSunburst = function(sunburstData) {
       for (const ancestor of ancestors) {
         if (!stack.includes(ancestor)) { stack.push(ancestor); }
       }
+      console.log(stack);
       drawArcs();
       drilled = true;
     }

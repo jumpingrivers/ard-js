@@ -1,5 +1,6 @@
 import { select } from 'd3-selection';
 import 'd3-transition';
+import { descending } from 'd3-array';
 import { hierarchy, partition } from 'd3-hierarchy';
 import { arc } from 'd3-shape';
 import { interpolateNumber } from 'd3-interpolate';
@@ -7,7 +8,6 @@ import { easeSinInOut as ease } from 'd3-ease';
 import { hcl } from 'd3-color';
 import { createColourLookup } from '../utils/index.mjs';
 import vizTemplate from './viz-templates/index.html';
-
 
 const baseWidth = 1000;
 const animationDuration = 2000;
@@ -140,12 +140,18 @@ const drawSunburst = function(sunburstData) {
     newSelection.dispatch('mouseover');
   };
 
+  const groupCounts = sunburstData.groupCounts;
+
   const constructHierarchy = function() {
     const root = stack[stack.length - 1];
 
     return hierarchy(root)
       .sum(d => d.value || 0)
-      .sort((a, b) => b.value - a.value);
+      .sort(function(a, b) {
+        const aCount = groupCounts[a.data.group].get(a.data.name);
+        const bCount = groupCounts[b.data.group].get(b.data.name);
+        return  descending(aCount, bCount);
+      });
   };
   
   const getColor = createColourLookup(instance.colorOverrides(), function(d) {

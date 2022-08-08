@@ -1,4 +1,4 @@
-import { rollups } from 'd3-array';
+import { rollup, rollups } from 'd3-array';
 
 
 const processData = function(inputData, steps) {
@@ -6,6 +6,11 @@ const processData = function(inputData, steps) {
   const rolledData = rollups(inputData, d => d.length, ...funcs);
 
   let counter = 0;
+
+  const groupCounts = steps.reduce(function(obj, stepName) {
+    obj[stepName] = rollup(inputData, d => d.length, d => d[stepName]);
+    return obj;
+  }, {});
 
   const objectifyArray = function(arr, depth) {
     const [name, value] = arr;
@@ -25,8 +30,11 @@ const processData = function(inputData, steps) {
 
     return obj;
   };
-  
-  return objectifyArray(['root', rolledData], 0);
+
+  const root = objectifyArray(['root', rolledData], 0);
+  root.groupCounts = groupCounts;
+
+  return root;
 };
 
 

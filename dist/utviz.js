@@ -1018,6 +1018,14 @@
     return a == null || b == null ? NaN : a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
   }
 
+  function descending(a, b) {
+    return a == null || b == null ? NaN
+      : b < a ? -1
+      : b > a ? 1
+      : b >= a ? 0
+      : NaN;
+  }
+
   class InternMap extends Map {
     constructor(entries, key = keyof) {
       super();
@@ -1080,6 +1088,10 @@
 
   function flatGroup(values, ...keys) {
     return flatten(groups(values, ...keys), keys);
+  }
+
+  function rollup(values, reduce, ...keys) {
+    return nest(values, identity$1, reduce, keys);
   }
 
   function rollups(values, reduce, ...keys) {
@@ -4631,6 +4643,11 @@
 
     let counter = 0;
 
+    const groupCounts = steps.reduce(function(obj, stepName) {
+      obj[stepName] = rollup(inputData, d => d.length, d => d[stepName]);
+      return obj;
+    }, {});
+
     const objectifyArray = function(arr, depth) {
       const [name, value] = arr;
     
@@ -4649,8 +4666,11 @@
 
       return obj;
     };
-    
-    return objectifyArray(['root', rolledData], 0);
+
+    const root = objectifyArray(['root', rolledData], 0);
+    root.groupCounts = groupCounts;
+
+    return root;
   };
 
   function count(node) {
@@ -5374,12 +5394,18 @@
       newSelection.dispatch('mouseover');
     };
 
+    const groupCounts = sunburstData.groupCounts;
+
     const constructHierarchy = function() {
       const root = stack[stack.length - 1];
 
       return hierarchy(root)
         .sum(d => d.value || 0)
-        .sort((a, b) => b.value - a.value);
+        .sort(function(a, b) {
+          const aCount = groupCounts[a.data.group].get(a.data.name);
+          const bCount = groupCounts[b.data.group].get(b.data.name);
+          return  descending(aCount, bCount);
+        });
     };
     
     const getColor = createColourLookup(instance.colorOverrides(), function(d) {

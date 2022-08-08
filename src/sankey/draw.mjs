@@ -265,7 +265,8 @@ const positionPopup = function(hoveredSelection, coords) {
 
   popup
     .style('top', px(coords.y))
-    .style('left', px(coords.x));
+    .style('left', px(coords.x))
+    .style('font-size', `${16 * (svgBounds.width / baseWidth)}px`);
 
   const top = 'translateY(-100%) translateY(-5px)';
   const right = 'translateX(20px)';

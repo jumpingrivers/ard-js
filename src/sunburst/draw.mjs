@@ -21,7 +21,6 @@ const drawSunburst = function(sunburstData) {
   const width = baseWidth;
   const height = baseWidth;
   const radius = width / 2;
-  const breadcrumbHeight = 50;
   
   const shadow = select(container.node().shadowRoot);
 
@@ -31,8 +30,7 @@ const drawSunburst = function(sunburstData) {
     .attr('viewBox', `${-radius} ${-radius} ${width} ${height}`)
     .datum(sunburstData);
 
-  const breadcrumb = shadow.select('#breadcrumb')
-    .attr('viewBox', `0 0 ${width} ${breadcrumbHeight}`);
+  const breadcrumb = shadow.select('#breadcrumb');
 
   const tempLayer = svg.append('g')
     .attr('id', 'temp-layer');
@@ -305,6 +303,12 @@ const drawSunburst = function(sunburstData) {
     .on('keyup.shift', function(evt) {
       if (evt.key === 'Shift') { baseLayer.classed('shift-pressed', false); }
     });
+
+  // Rescale the breadcrumb font as the space for the breadcrumb changes
+  new ResizeObserver(() => {
+    const breadcrumbWidth = breadcrumb.node().getBoundingClientRect().width;
+    breadcrumb.style('font-size', `${25 * (breadcrumbWidth / baseWidth)}px`);
+  }).observe(breadcrumb.node());
 };
 
 

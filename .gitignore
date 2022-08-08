@@ -1,6 +1,6 @@
 .DS_Store
 node_modules/
-sankey-sunburst.js*
-create-sankey.js*
+examples/scripts/utviz.js*
+create-viz.js*
 datasets.js*
 tests.js*

@@ -1,14 +1,15 @@
+/* global Handlebars */ 
 import { create, select } from 'd3-selection';
 import 'd3-transition';
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
-import Handlebars from 'handlebars';
+import { ascending } from 'd3-array';
 import { createColourLookup } from '../utils/index.mjs';
 import { processData } from './process-data.mjs';
 import vizTemplate from './viz-templates/index.html';
 import nodeTemplateString from './popup-templates/node.html';
 import linkTemplateString from './popup-templates/link.html';
 import popupStyleString from './popup-templates/popup.css';
-import { ascending } from 'd3-array';
+
 
 const linkOpacity = 0.25;
 const baseLinkOpacityOnHover = 0.5;

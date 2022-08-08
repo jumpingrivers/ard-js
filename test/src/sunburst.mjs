@@ -1,6 +1,6 @@
-/* global chartMaker, datasets, describe, it, beforeEach, chai, sinon */
+/* global utviz, datasets, describe, it, beforeEach, chai, sinon */
 const { expect } = chai;
-const { createSunburst } = chartMaker;
+const { createSunburst } = utviz;
 const { data } = datasets;
 
 const steps = datasets.steps.flat();

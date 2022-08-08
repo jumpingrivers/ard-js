@@ -1,6 +1,6 @@
-/* global chartMaker, datasets, describe, it, beforeEach, chai, sinon */
+/* global utviz, datasets, describe, it, beforeEach, chai, sinon */
 const { expect } = chai;
-const { createSankey } = chartMaker;
+const { createSankey } = utviz;
 const { data, steps } = datasets;
 
 

@@ -4097,7 +4097,7 @@
     const click = function(evt, d) {
       if (evt.altKey) {
         if (instance.altClickHandler() !== null) {
-          instance.altClickHandler().call(instance, d);
+          instance.altClickHandler().call(instance, evt, d);
         }
         return;
       }

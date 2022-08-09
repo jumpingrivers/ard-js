@@ -29,7 +29,7 @@ const createColourLookup = function(colorReference, defaultFunc) {
 
     if (name) {
       if (group) {
-        if (!obj.both[name]) { obj.both[name]; }
+        if (!lookup.both[name]) { lookup.both[name] = {}; }
         lookup.both[name][group] = color;
       }
       else { lookup.name[name] = color; }

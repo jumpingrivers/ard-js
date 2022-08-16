@@ -123,11 +123,7 @@ describe('sunburst.viz', function() {
     expect(sunburst.viz.tagName.toLowerCase()).to.equal('div');
     expect(sunburst.render().viz.tagName.toLowerCase()).to.equal('div');
   });
-
-  it('should hold an empty div if no rendering has taken place', function() {
-    expect(sunburst.viz.childNodes.length).to.equal(0);
-  });
-
+  
   it('should hold a div containing an SVG in its shadow dom if rendering has taken place', function() {
     const shadow = sunburst.render().viz.shadowRoot;
     expect(shadow.querySelector('#graphic') instanceof Element).to.equal(true);

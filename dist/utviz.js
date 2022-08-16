@@ -5261,7 +5261,7 @@
     return arc;
   }
 
-  var vizTemplate = "<style>\n  [id=\"wrapper\"] {\n    position: relative;\n    width: 100%;\n    overflow: auto;\n    user-select: none;\n  }\n\n  [id=\"breadcrumb\"] {\n    display: flex;\n    width: 100%;\n    height: 2em;\n    overflow: hidden;\n    font-size: 25px;\n    justify-content: center;\n  }\n\n  [id=\"breadcrumb\"] > span {\n    flex: 0 1 auto;\n    white-space: pre;\n    text-overflow: ellipsis;\n    min-width: 0;\n    overflow: hidden;\n  }\n\n  [id=\"breadcrumb\"] > span:last-child {\n    flex: 0 0 auto;\n  }\n\n  [id=\"breadcrumb\"] > span::before {\n    content: \" ➤  \";\n  }\n\n  [id=\"breadcrumb\"] > span:first-child::before {\n    content: \"\";\n  }\n\n  [id=\"graphic\"] {\n    display: block;\n    width: 75%;\n    margin-left: auto;\n    margin-right: auto;\n  }\n\n  [id=\"reset\"] {\n    margin-top: 10px;\n  }\n\n  [id=\"reset\"] button {\n    display: block;\n    float: right;\n    cursor: pointer;\n  }\n\n  [id=\"reset\"] button[disabled] {\n    cursor: not-allowed;\n  }\n\n  .sunburst-section {\n    cursor: pointer;\n  }\n\n  .sunburst-section.outer-annulus {\n    cursor: default;\n  }\n\n  .shift-pressed .sunburst-section {\n    cursor: default;\n  }\n\n  .shift-pressed.drilled-down .inner-annulus {\n    cursor: pointer;\n  }\n\n  .hidden {\n    display: none;\n  }\n\n  .background {\n    opacity: 0.5;\n  }\n\n  .background.animating {\n    opacity: 1\n  }\n</style>\n\n<div id=\"wrapper\">\n  <div id=\"breadcrumb\"></div>\n  <svg id=\"graphic\"></svg>\n  <div id=\"reset\"><button disabled=\"disabled\">Reset</button></div>\n</div>\n";
+  var vizTemplate = "<style>\n  [id=\"wrapper\"] {\n    position: relative;\n    width: 100%;\n    overflow: auto;\n    user-select: none;\n  }\n\n  [id=\"breadcrumb\"] {\n    display: flex;\n    width: 100%;\n    overflow: hidden;\n    justify-content: center;\n    height: 2.3em;\n    color: black;\n    text-shadow: -0.65px -0.65px 0 white, 0.65px -0.65px 0 white, -0.65px 0.65px 0 white, 0.65px 0.65px 0 white;\n  }\n\n  @media (max-resolution: 149dpi) {\n    [id=\"breadcrumb\"] {\n      text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;\n    }\n  }\n\n  [id=\"breadcrumb\"] > span {\n    flex: 0 1 auto;\n    white-space: pre;\n    text-overflow: ellipsis;\n    min-width: 0;\n    overflow: hidden;\n    padding-left: 0.1em;\n    margin-right: 0.5em;\n    box-sizing: border-box;\n    height: 1.4em;\n    line-height: 1.4em;\n    margin-left: -0.5em;\n  }\n\n  [id=\"breadcrumb\"] > span::before {\n    content: \"    \";\n  }\n\n  [id=\"breadcrumb\"] > span:first-child::before {\n    content: \"  \";\n  }\n\n  [id=\"breadcrumb\"] > span::after {\n    content: \"\";\n    width: 0; \n    height: 0;\n    border-top: 0.7em solid transparent;\n    border-bottom: 0.7em solid transparent;\n    border-left-width: 0.7em;\n    border-left-style: solid;\n    border-left-color: inherit;\n    position: absolute;\n  }\n\n  [id=\"graphic\"] {\n    display: block;\n    width: 75%;\n    margin-left: auto;\n    margin-right: auto;\n  }\n\n  [id=\"reset\"] {\n    margin-top: 10px;\n  }\n\n  [id=\"reset\"] button {\n    display: block;\n    float: right;\n    cursor: pointer;\n  }\n\n  [id=\"reset\"] button[disabled] {\n    cursor: not-allowed;\n  }\n\n  .sunburst-section {\n    cursor: pointer;\n  }\n\n  .sunburst-section.outer-annulus {\n    cursor: default;\n  }\n\n  .shift-pressed .sunburst-section {\n    cursor: default;\n  }\n\n  .shift-pressed.drilled-down .inner-annulus {\n    cursor: pointer;\n  }\n\n  .hidden {\n    display: none;\n  }\n\n  .background {\n    opacity: 0.5;\n  }\n\n  .background.animating {\n    opacity: 1\n  }\n</style>\n\n<div id=\"wrapper\">\n  <div id=\"breadcrumb\"></div>\n  <svg id=\"graphic\"></svg>\n  <div id=\"reset\"><button disabled=\"disabled\">Reset</button></div>\n</div>\n";
 
   const baseWidth = 1000;
   const animationDuration = 2000;
@@ -5312,10 +5312,11 @@
         .enter()
         .append('span')
         .text(function(d) {
-          const prefix = '';
-          const suffix = '';
-          return `${prefix}${d.name}${suffix}`;
-        });
+          const suffix = '  ';
+          return `${d.name}${suffix}`;
+        })
+        .style('background-color', d => getColor(d))
+        .style('border-left-color', d => getColor(d));
     };
 
     const mouseover = function(_, d) {
@@ -5354,7 +5355,6 @@
       baseLayer.classed('background', false);
       hoverLayer.text('');
       textLayer.text('');
-      breadcrumb.text('');
       drawBreadcrumb();
     };
 
@@ -5413,7 +5413,7 @@
       let color =  hcl(palette[d.wedgeIndex % palette.length]);
       // Next three numbers are very much experimental
       const chromaPower = 1/2;
-      const luminancePower = 1/3;
+      const luminancePower = 1;
       const luminanceDenominator = 5;
       color.c = color.c / Math.pow(d.depth, chromaPower);
       const lRemaining = 100 - color.l;
@@ -5567,7 +5567,7 @@
     // Rescale the breadcrumb font as the space for the breadcrumb changes
     new ResizeObserver(() => {
       const breadcrumbWidth = breadcrumb.node().getBoundingClientRect().width;
-      breadcrumb.style('font-size', `${25 * (breadcrumbWidth / baseWidth)}px`);
+      breadcrumb.style('font-size', `${30 * (breadcrumbWidth / baseWidth)}px`);
     }).observe(breadcrumb.node());
   };
 

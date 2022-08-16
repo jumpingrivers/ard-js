@@ -9,10 +9,17 @@
   [id="breadcrumb"] {
     display: flex;
     width: 100%;
-    height: 2em;
     overflow: hidden;
-    font-size: 25px;
     justify-content: center;
+    height: 2.3em;
+    color: black;
+    text-shadow: -0.65px -0.65px 0 white, 0.65px -0.65px 0 white, -0.65px 0.65px 0 white, 0.65px 0.65px 0 white;
+  }
+
+  @media (max-resolution: 149dpi) {
+    [id="breadcrumb"] {
+      text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+    }
   }
 
   [id="breadcrumb"] > span {
@@ -21,18 +28,32 @@
     text-overflow: ellipsis;
     min-width: 0;
     overflow: hidden;
-  }
-
-  [id="breadcrumb"] > span:last-child {
-    flex: 0 0 auto;
+    padding-left: 0.1em;
+    margin-right: 0.5em;
+    box-sizing: border-box;
+    height: 1.4em;
+    line-height: 1.4em;
+    margin-left: -0.5em;
   }
 
   [id="breadcrumb"] > span::before {
-    content: " ➤  ";
+    content: "    ";
   }
 
   [id="breadcrumb"] > span:first-child::before {
+    content: "  ";
+  }
+
+  [id="breadcrumb"] > span::after {
     content: "";
+    width: 0; 
+    height: 0;
+    border-top: 0.7em solid transparent;
+    border-bottom: 0.7em solid transparent;
+    border-left-width: 0.7em;
+    border-left-style: solid;
+    border-left-color: inherit;
+    position: absolute;
   }
 
   [id="graphic"] {

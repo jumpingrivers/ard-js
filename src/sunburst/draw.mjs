@@ -58,10 +58,11 @@ const drawSunburst = function(sunburstData) {
       .enter()
       .append('span')
       .text(function(d) {
-        const prefix = '';
-        const suffix = '';
-        return `${prefix}${d.name}${suffix}`;
-      });
+        const suffix = '  ';
+        return `${d.name}${suffix}`;
+      })
+      .style('background-color', d => getColor(d))
+      .style('border-left-color', d => getColor(d));
   };
 
   const mouseover = function(_, d) {
@@ -100,7 +101,6 @@ const drawSunburst = function(sunburstData) {
     baseLayer.classed('background', false);
     hoverLayer.text('');
     textLayer.text('');
-    breadcrumb.text('');
     drawBreadcrumb();
   };
 
@@ -159,7 +159,7 @@ const drawSunburst = function(sunburstData) {
     let color =  hcl(palette[d.wedgeIndex % palette.length]);
     // Next three numbers are very much experimental
     const chromaPower = 1/2;
-    const luminancePower = 1/3;
+    const luminancePower = 1;
     const luminanceDenominator = 5;
     color.c = color.c / Math.pow(d.depth, chromaPower);
     const lRemaining = 100 - color.l;
@@ -313,7 +313,7 @@ const drawSunburst = function(sunburstData) {
   // Rescale the breadcrumb font as the space for the breadcrumb changes
   new ResizeObserver(() => {
     const breadcrumbWidth = breadcrumb.node().getBoundingClientRect().width;
-    breadcrumb.style('font-size', `${25 * (breadcrumbWidth / baseWidth)}px`);
+    breadcrumb.style('font-size', `${30 * (breadcrumbWidth / baseWidth)}px`);
   }).observe(breadcrumb.node());
 };
 

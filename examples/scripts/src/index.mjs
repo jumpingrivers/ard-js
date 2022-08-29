@@ -9,7 +9,7 @@ const sankeyContainer = document.querySelector('#sankey-container');
 sankeyContainer.appendChild(sankey.viz);
 
 const sunburst = utviz
-  .createSunburst(data, steps.flat())
+  .createSunburst(data, steps.map(d => d[0]))
   .render();
 
 const sunburstContainer = document.querySelector('#sunburst-container');

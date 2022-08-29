@@ -3676,7 +3676,7 @@
         .target(horizontalTarget);
   }
 
-  var vizTemplate$1 = "<style>\n  [id=\"wrapper\"] {\n    position: relative;\n    width: 100%;\n    overflow: auto;\n    user-select: none;\n  }\n\n  [id=\"dropdowns\"] {\n    display: flex;\n    justify-content: space-between;\n    width: 100%;\n    gap: 5%;\n  }\n\n  [id=\"dropdowns\"] > div {\n    flex: 1 1 100%;\n    border: 1px solid #d8d8d8;\n  }\n\n  [id=\"dropdowns\"] select {\n    width: 100%;\n    min-height: 28px;\n    border: none;\n  }\n\n  [id=\"graphic\"] {\n    display: block;\n    width: 100%;\n  }\n\n  [id=\"popup\"] {\n    position: absolute;\n    pointer-events: none;\n  }\n\n  [id=\"reset\"] {\n    margin-top: 10px;\n  }\n\n  [id=\"reset\"] button {\n    display: block;\n    float: right;\n    cursor: pointer;\n  }\n\n  [id=\"reset\"] button[disabled] {\n    cursor: not-allowed;\n  }\n\n  .hidden {\n    display: none;\n  }\n</style>\n\n<div id=\"wrapper\">\n  <div id=\"dropdowns\"></div>\n  <svg id=\"graphic\"></svg>\n  <div id=\"popup\" class=\"hidden\"></div>\n  <div id=\"reset\"><button disabled=\"disabled\">Reset</button></div>\n</div>\n";
+  var vizTemplate$1 = "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;700&display=swap\" rel=\"stylesheet\">\n\n<style>\n  [id=\"wrapper\"] {\n    font-family: 'Source Serif Pro', serif;\n    position: relative;\n    width: 100%;\n    overflow: auto;\n    user-select: none;\n  }\n\n  [id=\"dropdowns\"] {\n    display: flex;\n    justify-content: space-between;\n    width: 100%;\n    gap: 5%;\n  }\n\n  [id=\"dropdowns\"] > div {\n    flex: 1 1 100%;\n    border: 1px solid #d8d8d8;\n  }\n\n  [id=\"dropdowns\"] select {\n    font-family : inherit;\n    width: 100%;\n    min-height: 28px;\n    border: none;\n  }\n\n  [id=\"graphic\"] {\n    display: block;\n    width: 100%;\n  }\n\n  [id=\"popup\"] {\n    position: absolute;\n    pointer-events: none;\n  }\n\n  [id=\"reset\"] {\n    margin-top: 10px;\n  }\n\n  [id=\"reset\"] button {\n    font-family : inherit;\n    display: block;\n    float: right;\n    cursor: pointer;\n  }\n\n  [id=\"reset\"] button[disabled] {\n    cursor: not-allowed;\n  }\n\n  .hidden {\n    display: none;\n  }\n</style>\n\n<div id=\"wrapper\">\n  <div id=\"dropdowns\"></div>\n  <svg id=\"graphic\"></svg>\n  <div id=\"popup\" class=\"hidden\"></div>\n  <div id=\"reset\"><button disabled=\"disabled\">Reset</button></div>\n</div>\n";
 
   var nodeTemplateString = "<p>Name: {{name}}</p>\n<p>Count: {{count}}</p>";
 
@@ -4436,6 +4436,10 @@
     const container = create$1('div')
       .style('width', '100%')
       .style('position', 'relative');
+
+    container.append('link')
+      .attr('href', 'https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;700&display=swap')
+      .attr('rel', 'stylesheet');
 
     select(container.node().attachShadow({mode: 'open'}));
 
@@ -5261,7 +5265,7 @@
     return arc;
   }
 
-  var vizTemplate = "<style>\n  [id=\"wrapper\"] {\n    position: relative;\n    width: 100%;\n    overflow: auto;\n    user-select: none;\n  }\n\n  [id=\"breadcrumb\"] {\n    display: flex;\n    width: 100%;\n    height: 2em;\n    overflow: hidden;\n    font-size: 25px;\n    justify-content: center;\n  }\n\n  [id=\"breadcrumb\"] > span {\n    flex: 0 1 auto;\n    white-space: pre;\n    text-overflow: ellipsis;\n    min-width: 0;\n    overflow: hidden;\n  }\n\n  [id=\"breadcrumb\"] > span:last-child {\n    flex: 0 0 auto;\n  }\n\n  [id=\"breadcrumb\"] > span::before {\n    content: \" ➤  \";\n  }\n\n  [id=\"breadcrumb\"] > span:first-child::before {\n    content: \"\";\n  }\n\n  [id=\"graphic\"] {\n    display: block;\n    width: 75%;\n    margin-left: auto;\n    margin-right: auto;\n  }\n\n  [id=\"reset\"] {\n    margin-top: 10px;\n  }\n\n  [id=\"reset\"] button {\n    display: block;\n    float: right;\n    cursor: pointer;\n  }\n\n  [id=\"reset\"] button[disabled] {\n    cursor: not-allowed;\n  }\n\n  .sunburst-section {\n    cursor: pointer;\n  }\n\n  .sunburst-section.outer-annulus {\n    cursor: default;\n  }\n\n  .shift-pressed .sunburst-section {\n    cursor: default;\n  }\n\n  .shift-pressed.drilled-down .inner-annulus {\n    cursor: pointer;\n  }\n\n  .hidden {\n    display: none;\n  }\n\n  .background {\n    opacity: 0.5;\n  }\n\n  .background.animating {\n    opacity: 1\n  }\n</style>\n\n<div id=\"wrapper\">\n  <div id=\"breadcrumb\"></div>\n  <svg id=\"graphic\"></svg>\n  <div id=\"reset\"><button disabled=\"disabled\">Reset</button></div>\n</div>\n";
+  var vizTemplate = "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n<link href=\"https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;700&display=swap\" rel=\"stylesheet\">\n\n<style>\n  [id=\"wrapper\"] {\n    font-family: 'Source Serif Pro', serif;\n    position: relative;\n    width: 100%;\n    overflow: auto;\n    user-select: none;\n  }\n\n  [id=\"breadcrumb\"] {\n    display: flex;\n    width: 100%;\n    overflow: hidden;\n    justify-content: center;\n    height: 2.3em;\n    color: black;\n    text-shadow: -0.65px -0.65px 0 white, 0.65px -0.65px 0 white, -0.65px 0.65px 0 white, 0.65px 0.65px 0 white;\n    font-weight: bold;\n  }\n\n  @media (max-resolution: 149dpi) {\n    [id=\"breadcrumb\"] {\n      text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;\n    }\n  }\n\n  [id=\"breadcrumb\"] > span {\n    flex: 0 1 auto;\n    white-space: pre;\n    text-overflow: ellipsis;\n    min-width: 0;\n    overflow: hidden;\n    padding-left: 0.1em;\n    margin-right: 0.5em;\n    box-sizing: border-box;\n    height: 1.4em;\n    line-height: 1.4em;\n    margin-left: -0.5em;\n  }\n\n  [id=\"breadcrumb\"] > span::before {\n    content: \"    \";\n  }\n\n  [id=\"breadcrumb\"] > span:first-child::before {\n    content: \"  \";\n  }\n\n  [id=\"breadcrumb\"] > span::after {\n    content: \"\";\n    width: 0; \n    height: 0;\n    border-top: 0.7em solid transparent;\n    border-bottom: 0.7em solid transparent;\n    border-left-width: 0.7em;\n    border-left-style: solid;\n    border-left-color: inherit;\n    position: absolute;\n  }\n\n  [id=\"graphic\"] {\n    display: block;\n    width: 75%;\n    margin-left: auto;\n    margin-right: auto;\n  }\n\n  [id=\"reset\"] {\n    margin-top: 10px;\n  }\n\n  [id=\"reset\"] button {\n    font-family : inherit;\n    display: block;\n    float: right;\n    cursor: pointer;\n  }\n\n  [id=\"reset\"] button[disabled] {\n    cursor: not-allowed;\n  }\n\n  .sunburst-section {\n    cursor: pointer;\n  }\n\n  .sunburst-section.outer-annulus {\n    cursor: default;\n  }\n\n  .shift-pressed .sunburst-section {\n    cursor: default;\n  }\n\n  .shift-pressed.drilled-down .inner-annulus {\n    cursor: pointer;\n  }\n\n  .hidden {\n    display: none;\n  }\n\n  .background {\n    opacity: 0.5;\n  }\n\n  .background.animating {\n    opacity: 1\n  }\n</style>\n\n<div id=\"wrapper\">\n  <div id=\"breadcrumb\"></div>\n  <svg id=\"graphic\"></svg>\n  <div id=\"reset\"><button disabled=\"disabled\">Reset</button></div>\n</div>\n";
 
   const baseWidth = 1000;
   const animationDuration = 2000;
@@ -5312,10 +5316,11 @@
         .enter()
         .append('span')
         .text(function(d) {
-          const prefix = '';
-          const suffix = '';
-          return `${prefix}${d.name}${suffix}`;
-        });
+          const suffix = '  ';
+          return `${d.name}${suffix}`;
+        })
+        .style('background-color', d => getColor(d))
+        .style('border-left-color', d => getColor(d));
     };
 
     const mouseover = function(_, d) {
@@ -5354,7 +5359,6 @@
       baseLayer.classed('background', false);
       hoverLayer.text('');
       textLayer.text('');
-      breadcrumb.text('');
       drawBreadcrumb();
     };
 
@@ -5413,7 +5417,7 @@
       let color =  hcl(palette[d.wedgeIndex % palette.length]);
       // Next three numbers are very much experimental
       const chromaPower = 1/2;
-      const luminancePower = 1/3;
+      const luminancePower = 1;
       const luminanceDenominator = 5;
       color.c = color.c / Math.pow(d.depth, chromaPower);
       const lRemaining = 100 - color.l;
@@ -5567,7 +5571,7 @@
     // Rescale the breadcrumb font as the space for the breadcrumb changes
     new ResizeObserver(() => {
       const breadcrumbWidth = breadcrumb.node().getBoundingClientRect().width;
-      breadcrumb.style('font-size', `${25 * (breadcrumbWidth / baseWidth)}px`);
+      breadcrumb.style('font-size', `${30 * (breadcrumbWidth / baseWidth)}px`);
     }).observe(breadcrumb.node());
   };
 
@@ -5584,6 +5588,10 @@
     const container = create$1('div')
       .style('width', '100%')
       .style('position', 'relative');
+
+    container.append('link')
+      .attr('href', 'https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;700&display=swap')
+      .attr('rel', 'stylesheet');
 
     select(container.node().attachShadow({mode: 'open'}));
 

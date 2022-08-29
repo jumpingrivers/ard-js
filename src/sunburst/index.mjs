@@ -20,6 +20,10 @@ const createSunburst = function(initData, initSteps) {
     .style('width', '100%')
     .style('position', 'relative');
 
+  container.append('link')
+    .attr('href', 'https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;700&display=swap')
+    .attr('rel', 'stylesheet');
+
   select(container.node().attachShadow({mode: 'open'}));
 
   addReadOnlyProp('viz', container.node());

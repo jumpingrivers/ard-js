@@ -1426,7 +1426,7 @@
 
 	entryUnbind('Array', 'flat');
 
-	var version = "0.0.1";
+	var version = "1.0.0";
 
 	var xhtml = "http://www.w3.org/1999/xhtml";
 

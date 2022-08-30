@@ -1,7 +1,7 @@
 {
-  "name": "sankey-sunburst",
-  "version": "0.0.1",
-  "description": "",
+  "name": "utviz",
+  "version": "1.0.0",
+  "description": "Create interactive Sankey and Sunburst graphics",
   "main": "src/index.mjs",
   "scripts": {
     "test": "npm run build && npx mocha-headless-chrome -f test/testrunner.html",
@@ -16,8 +16,8 @@
   "lint-staged": {
     "*.mjs": "npm run lint"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "utVizSankey authors",
+  "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-json": "^4.1.0",

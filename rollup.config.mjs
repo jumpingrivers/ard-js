@@ -27,6 +27,7 @@ const dist =  {
   plugins: [
     nodeResolve(),
     commonjs(),
+    json(),
     string({
       include: ['**/*.html', '**/*.css'],
     })

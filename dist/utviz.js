@@ -191,26 +191,26 @@
 	var Deno = global$9.Deno;
 	var versions = process && process.versions || Deno && Deno.version;
 	var v8 = versions && versions.v8;
-	var match, version;
+	var match, version$1;
 
 	if (v8) {
 	  match = v8.split('.');
 	  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
 	  // but their correct versions are not interesting for us
-	  version = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
+	  version$1 = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
 	}
 
 	// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
 	// so check `userAgent` even if `.v8` exists, but 0
-	if (!version && userAgent) {
+	if (!version$1 && userAgent) {
 	  match = userAgent.match(/Edge\/(\d+)/);
 	  if (!match || match[1] >= 74) {
 	    match = userAgent.match(/Chrome\/(\d+)/);
-	    if (match) version = +match[1];
+	    if (match) version$1 = +match[1];
 	  }
 	}
 
-	var engineV8Version = version;
+	var engineV8Version = version$1;
 
 	/* eslint-disable es-x/no-symbol -- required for testing */
 
@@ -1425,6 +1425,8 @@
 	var entryUnbind = entryUnbind$2;
 
 	entryUnbind('Array', 'flat');
+
+	var version = "0.0.1";
 
 	var xhtml = "http://www.w3.org/1999/xhtml";
 
@@ -9315,6 +9317,7 @@
 
 	exports.createSankey = createSankey;
 	exports.createSunburst = createSunburst;
+	exports.version = version;
 
 	Object.defineProperty(exports, '__esModule', { value: true });
 

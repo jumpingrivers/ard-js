@@ -144,3 +144,7 @@ Updates the viz based on the latest set of stored properties and returns the sun
 ### sunburst.steps([value])
 
 If supplied, `steps` should be an array. The elements of the array should be strings. Each element of the `steps` array represents a ring, going from inside to outside. The strings should match keys in the `data`.
+
+## `utviz.version`
+
+A property whose value is the current semantic version (format: _digits.digits.digits_) of utviz.js.

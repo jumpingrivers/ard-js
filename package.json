@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "chai": "^4.3.6",
@@ -36,6 +37,7 @@
     "sinon-chai": "^3.7.0"
   },
   "dependencies": {
+    "core-js": "^3.25.0",
     "d3-array": "^3.2.0",
     "d3-color": "^3.1.0",
     "d3-ease": "^3.0.1",

@@ -1,4 +1,5 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { string } from 'rollup-plugin-string';
 import { terser } from 'rollup-plugin-terser';
@@ -25,6 +26,7 @@ const dist =  {
   ],
   plugins: [
     nodeResolve(),
+    commonjs(),
     string({
       include: ['**/*.html', '**/*.css'],
     })

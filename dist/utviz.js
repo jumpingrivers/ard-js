@@ -5323,8 +5323,34 @@
         .style('border-left-color', d => getColor(d));
     };
 
-    const mouseover = function(_, d) {
-      mouseout();
+    const getPathToRingSection = function(data) {
+      return lookupMap.get(data.data)
+        .ancestors()
+        .filter(d => d.depth)
+        .reverse();
+    };
+
+    const summarisePath = function(path) {
+      const totalCount = svg.datum().value;
+      return path.map(function(d) {
+        return {
+          group: d.data.group,
+          name: d.data.name,
+          value: d.value,
+          percentage: (d.value / totalCount) * 100
+        };
+      });
+    };
+
+    const clearHighlighting = function() {
+      baseLayer.classed('background', false);
+      hoverLayer.text('');
+      textLayer.text('');
+      drawBreadcrumb();
+    };
+
+    const mouseover = function(evt, d) {
+      clearHighlighting();
       const data = d.ancestors().filter(d => d.depth);
       
       baseLayer.classed('background', true);
@@ -5337,7 +5363,8 @@
         .style('fill', d => getColor(d.data))
         .style('stroke', 'black');
 
-      const percent = (d.value / svg.datum().value) * 100;
+      const totalCount = svg.datum().value;
+      const percent = (d.value / totalCount) * 100;
 
       textLayer
         .append('text')
@@ -5346,27 +5373,32 @@
         .style('font-size', '75px')
         .style('dominant-baseline', 'middle');
 
-      const breadData = lookupMap.get(d.data)
-        .ancestors()
-        .filter(d => d.depth)
-        .reverse()
-        .map(d => d.data);
-
+      const path = getPathToRingSection(d);
+      const breadData = path.map(d => d.data);
       drawBreadcrumb(breadData);
+
+      if (instance.mouseoverHandler()) {
+        const handler = instance.mouseoverHandler().bind(instance);
+        handler(evt, d, summarisePath(path));
+      }
     };
 
-    const mouseout = function() {
-      baseLayer.classed('background', false);
-      hoverLayer.text('');
-      textLayer.text('');
-      drawBreadcrumb();
+    const mouseout = function(evt, d) {
+      clearHighlighting();
+      if (instance.mouseoutHandler()) {
+        const handler = instance.mouseoutHandler().bind(instance);
+        const path = getPathToRingSection(d);
+        handler(evt, d, summarisePath(path));
+      } 
     };
 
     let stack = [sunburstData];
 
     const click = function(evt, d) {
-      if (evt.altKey && instance.altClickHandler() !== null) {
-        instance.altClickHandler().call(instance, evt, d);
+      if (evt.altKey && instance.altClickHandler()) {
+        const handler = instance.altClickHandler().bind(instance);
+        const path = getPathToRingSection(d);
+        handler(evt, d, summarisePath(path));
         return;
       }
       
@@ -5579,6 +5611,8 @@
     const instance = {};
     let data, steps;
     let altClickHandler = null;
+    let mouseoverHandler = null;
+    let mouseoutHandler = null;
     let colorOverrides = [];
     let palette = schemeTableau10;
 
@@ -5637,6 +5671,38 @@
     addReadOnlyProp('altClickHandler', function(altClickHandler) {
       if (altClickHandler === undefined) { return getAltClickHandler(); }
       return setAltClickHandler(altClickHandler);
+    });
+
+    // The mouseover handler function
+    const getMouseoverHandler = () => mouseoverHandler;
+
+    const setMouseoverHandler = function(f) {
+      if (typeof f !== 'function' && f !== null) {
+        throw new Error('mouseoverHandler must be a function or null');
+      }
+      mouseoverHandler = f;
+      return instance;
+    };
+
+    addReadOnlyProp('mouseoverHandler', function(mouseoverHandler) {
+      if (mouseoverHandler === undefined) { return getMouseoverHandler(); }
+      return setMouseoverHandler(mouseoverHandler);
+    });
+
+    // The mouseout handler function
+    const getMouseoutHandler = () => mouseoutHandler;
+
+    const setMouseoutHandler = function(f) {
+      if (typeof f !== 'function' && f !== null) {
+        throw new Error('mouseoutHandler must be a function or null');
+      }
+      mouseoutHandler = f;
+      return instance;
+    };
+
+    addReadOnlyProp('mouseoutHandler', function(mouseoutHandler) {
+      if (mouseoutHandler === undefined) { return getMouseoutHandler(); }
+      return setMouseoutHandler(mouseoutHandler);
     });
 
     // The palette function

@@ -115,7 +115,7 @@ document.querySelector('#my-sunburst-container')
 
 ### sunburst.altClickHandler([value])
 
-If supplied, `value` must be a function or `null`. If it is a function the function will be called whenever the user alt-clicks a node in the sunburst diagram and is passed the click event and the ring-section's data as arguments while the `this` variable will correspond to the sunburst instance. If `value` is null then any previously-set alt-click handler will be removed.
+If supplied, `value` must be a function or `null`. If it is a function the function will be called whenever the user alt-clicks a ring section in the sunburst diagram and is passed the click event, the ring-section's data and an array describing the path to that ring section as arguments while the `this` variable will correspond to the sunburst instance. If `value` is null then any previously-set alt-click handler will be removed.
 
 ### sunburst.colorOverrides([value])
 
@@ -124,6 +124,14 @@ If supplied, `value` should be an array of objects. Each object specifies some f
 ### sunburst.data([value])
 
 If supplied, `value` must be an array of objects. Each object should represent a single entry, e.g. a single student. These data values, alongside the `steps` are then used to construct the sunburst chart.
+
+### sunburst.mouseoutHandler([value])
+
+If supplied, `value` must be a function or `null`. If it is a function the function will be called whenever the user moves their mouse out of a ring section in the sunburst diagram and is passed the mouseout event, the ring-section's data and an array describing the path to that ring section as arguments while the `this` variable will correspond to the sunburst instance. If `value` is null then any previously-set alt-click handler will be removed.
+
+### sunburst.mouseoverHandler([value])
+
+If supplied, `value` must be a function or `null`. If it is a function the function will be called whenever the user moves their mouse into a ring section in the sunburst diagram and is passed the mouseover event, the ring-section's data and an array describing the path to that ring section as arguments while the `this` variable will correspond to the sunburst instance. If `value` is null then any previously-set alt-click handler will be removed.
 
 ### sunburst.palette([value])
 

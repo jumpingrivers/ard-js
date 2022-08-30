@@ -183,6 +183,10 @@ describe('sunburst.palette', function() {
     const arr = ['blue', 'pink'];
     expect(sunburst.palette(arr).palette()).to.equal(arr);
   });
+
+  it('should not throw if passed an array with only one appropriate element', function() {
+    expect(() => sunburst.palette(['blue'])).to.not.throw();
+  });
 });
 
 

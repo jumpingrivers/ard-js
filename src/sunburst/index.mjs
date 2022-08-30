@@ -77,7 +77,7 @@ const createSunburst = function(initData, initSteps) {
     if (!Array.isArray(a)) {
       throw new Error('palette must be an array');
     }
-    if (a.length < 2) {
+    if (a.length < 1) {
       throw new Error('palette must be an array with at least one element');
     }
     if(!a.every(d => typeof d === 'string')) {

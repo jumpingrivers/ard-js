@@ -10,6 +10,8 @@ const createSunburst = function(initData, initSteps) {
   const instance = {};
   let data, steps;
   let altClickHandler = null;
+  let mouseoverHandler = null;
+  let mouseoutHandler = null;
   let colorOverrides = [];
   let palette = schemeTableau10;
 
@@ -68,6 +70,38 @@ const createSunburst = function(initData, initSteps) {
   addReadOnlyProp('altClickHandler', function(altClickHandler) {
     if (altClickHandler === undefined) { return getAltClickHandler(); }
     return setAltClickHandler(altClickHandler);
+  });
+
+  // The mouseover handler function
+  const getMouseoverHandler = () => mouseoverHandler;
+
+  const setMouseoverHandler = function(f) {
+    if (typeof f !== 'function' && f !== null) {
+      throw new Error('mouseoverHandler must be a function or null');
+    }
+    mouseoverHandler = f;
+    return instance;
+  };
+
+  addReadOnlyProp('mouseoverHandler', function(mouseoverHandler) {
+    if (mouseoverHandler === undefined) { return getMouseoverHandler(); }
+    return setMouseoverHandler(mouseoverHandler);
+  });
+
+  // The mouseout handler function
+  const getMouseoutHandler = () => mouseoutHandler;
+
+  const setMouseoutHandler = function(f) {
+    if (typeof f !== 'function' && f !== null) {
+      throw new Error('mouseoutHandler must be a function or null');
+    }
+    mouseoutHandler = f;
+    return instance;
+  };
+
+  addReadOnlyProp('mouseoutHandler', function(mouseoutHandler) {
+    if (mouseoutHandler === undefined) { return getMouseoutHandler(); }
+    return setMouseoutHandler(mouseoutHandler);
   });
 
   // The palette function

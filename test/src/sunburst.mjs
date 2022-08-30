@@ -159,6 +159,62 @@ describe('sunburst.altClickHandler', function() {
 });
 
 
+describe('sunburst.mouseoverHandler', function() {
+  it('should throw if passed an argument other than a function, null or undefined', function() {
+    expect(() => sunburst.mouseoverHandler({})).to.throw();
+    expect(() => sunburst.mouseoverHandler([])).to.throw();
+    expect(() => sunburst.mouseoverHandler(7)).to.throw();
+    expect(() => sunburst.mouseoverHandler('function')).to.throw(); 
+  });
+
+  it('should default to null', function() {
+    expect(sunburst.mouseoverHandler()).to.equal(null);
+  });
+
+  it('should return the instance if passed null', function() {
+    expect(sunburst.mouseoverHandler(null)).to.equal(sunburst);
+  });
+
+  it('should return the instance if passed a function', function() {
+    const func = function() {};
+    expect(sunburst.mouseoverHandler(func)).to.equal(sunburst);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    const func = function() {};
+    expect(sunburst.mouseoverHandler((func)).mouseoverHandler()).to.equal(func);
+  });
+});
+
+
+describe('sunburst.mouseoutHandler', function() {
+  it('should throw if passed an argument other than a function, null or undefined', function() {
+    expect(() => sunburst.mouseoutHandler({})).to.throw();
+    expect(() => sunburst.mouseoutHandler([])).to.throw();
+    expect(() => sunburst.mouseoutHandler(7)).to.throw();
+    expect(() => sunburst.mouseoutHandler('function')).to.throw(); 
+  });
+
+  it('should default to null', function() {
+    expect(sunburst.mouseoutHandler()).to.equal(null);
+  });
+
+  it('should return the instance if passed null', function() {
+    expect(sunburst.mouseoutHandler(null)).to.equal(sunburst);
+  });
+
+  it('should return the instance if passed a function', function() {
+    const func = function() {};
+    expect(sunburst.mouseoutHandler(func)).to.equal(sunburst);
+  });
+
+  it('should return the current stored value if passed no arguments', function() {
+    const func = function() {};
+    expect(sunburst.mouseoutHandler((func)).mouseoutHandler()).to.equal(func);
+  });
+});
+
+
 describe('sunburst.palette', function() {
   it('should throw if passed an argument other than an array or undefined', function() {
     expect(() => sunburst.palette({})).to.throw();

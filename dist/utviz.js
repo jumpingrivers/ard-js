@@ -8964,7 +8964,6 @@
 	      for (const ancestor of ancestors) {
 	        if (!stack.includes(ancestor)) { stack.push(ancestor); }
 	      }
-	      console.log(stack);
 	      drawArcs();
 	      drilled = true;
 	    }

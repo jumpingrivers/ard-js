@@ -79,7 +79,8 @@ const drawSunburst = function(sunburstData) {
         group: d.data.group,
         name: d.data.name,
         value: d.value,
-        percentage: (d.value / totalCount) * 100
+        percentage: (d.value / totalCount) * 100,
+        color: getColor(d.data)
       };
     });
   };
@@ -158,7 +159,6 @@ const drawSunburst = function(sunburstData) {
       for (const ancestor of ancestors) {
         if (!stack.includes(ancestor)) { stack.push(ancestor); }
       }
-      console.log(stack);
       drawArcs();
       drilled = true;
     }

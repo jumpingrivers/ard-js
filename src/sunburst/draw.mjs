@@ -79,7 +79,8 @@ const drawSunburst = function(sunburstData) {
         group: d.data.group,
         name: d.data.name,
         value: d.value,
-        percentage: (d.value / totalCount) * 100
+        percentage: (d.value / totalCount) * 100,
+        color: getColor(d.data)
       };
     });
   };

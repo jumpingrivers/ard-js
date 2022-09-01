@@ -1,5 +1,8 @@
 # Version Notes
 
+## 1.0.1
+* Add missing color value to sunburst-path objects
+
 ## 1.0.0
 
 Includes:
